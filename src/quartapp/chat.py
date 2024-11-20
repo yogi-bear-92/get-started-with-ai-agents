@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Optional, Tuple
 from quart import Blueprint, jsonify, request, Response, render_template, current_app
 
 import asyncio
@@ -82,28 +82,27 @@ async def stop_server():
 async def index():
     return await render_template("index.html")
 
-class MyEventHandler(AsyncAgentEventHandler):
+class MyEventHandler(AsyncAgentEventHandler[Tuple[str, str]]):
     
-    def __init__(self, queue: asyncio.Queue):
+    def __init__(self):
         super().__init__()
-        self.queue = queue    
         self.accumulated_text = ""
     
-    async def on_message_delta(self, delta: "MessageDeltaChunk") -> None:
+    async def on_message_delta(self, delta: "MessageDeltaChunk") -> Optional[Tuple[str, str]]:
         for content_part in delta.delta.content:
             if isinstance(content_part, MessageDeltaTextContent):
                 text_value = content_part.text.value if content_part.text else "No text"
                 self.accumulated_text += text_value
                 stream_data = json.dumps({'content': text_value, 'type': "message"})
                 print(f"Stream data: {stream_data}")
-                await self.queue.put(("message", text_value))
+                return "message", text_value
                 
-    async def on_thread_message(self, message: "ThreadMessage") -> None:
+    async def on_thread_message(self, message: "ThreadMessage") -> Optional[Tuple[str, str]]:
         
         if (message.status == "completed"):
             stream_data = json.dumps({'content': self.accumulated_text, 'type': "completed_message"})
             print(f"Stream data: {stream_data}")
-            await self.queue.put(("completed_message", self.accumulated_text))
+            return "completed_message", self.accumulated_text
 
     async def on_thread_run(self, run: "ThreadRun") -> None:
         print(f"ThreadRun status: {run.status}")
@@ -115,49 +114,40 @@ class MyEventHandler(AsyncAgentEventHandler):
         print(f"An error occurred. Data: {data}")
         stream_data = json.dumps({'type': "stream_end"})
         print(f"Stream data: {stream_data}")
+        return "stream_end", ""
 
-    async def on_done(self) -> None:
+    async def on_done(self) -> Tuple[str, str]:
         print("Stream completed.")
-        await self.queue.put(("stream_end", ""))
+        return "stream_end", ""
 
     async def on_unhandled_event(self, event_type: str, event_data: Any) -> None:
         print(f"Unhandled Event Type: {event_type}, Data: {event_data}")
 
-async def create_stream(queue: asyncio.Queue, thread_id: str, agent_id: str):
-    async with await bp.ai_client.agents.create_stream(
-        thread_id=thread_id, assistant_id=agent_id,
-        event_handler=MyEventHandler(queue)
-    ) as stream:
-        await stream.until_done()
 
 async def get_result(thread_id: str, agent_id: str):
     
-    queue = asyncio.Queue()
     
-    task = asyncio.create_task(create_stream(queue, thread_id, agent_id))
-
-    while True:
-        try:
-            message_type, message = await queue.get()
-            if message_type == "message":
-                event_data = json.dumps({'content': message, 'type': message_type})
-                yield f"data: {event_data}\n\n"
-            elif message_type == "completed_message":
-                event_data = json.dumps({'content': message, 'type': message_type})
-                yield f"data: {event_data}\n\n"
-            elif message_type == "stream_end":
-                event_data = json.dumps({'content': message, 'type': message_type})
-                yield f"data: {event_data}\n\n"
-                await queue.task_done()            
-                return
-            elif message_type == "function":
-                function_message = f"Function {message} called"
-                event_data = json.dumps({'content': function_message})
-                yield f"data: {event_data}\n\n"
-        except StopIteration:
-            break
-    
-    await task
+    async with await bp.ai_client.agents.create_stream(
+        thread_id=thread_id, assistant_id=agent_id,
+        event_handler=MyEventHandler()
+    ) as stream:
+        async for _, _, event_rt in stream:
+            if event_rt:
+                message_type, message = event_rt
+                if message_type == "message":
+                    event_data = json.dumps({'content': message, 'type': message_type})
+                    yield f"data: {event_data}\n\n"
+                elif message_type == "completed_message":
+                    event_data = json.dumps({'content': message, 'type': message_type})
+                    yield f"data: {event_data}\n\n"
+                elif message_type == "stream_end":
+                    event_data = json.dumps({'content': message, 'type': message_type})
+                    yield f"data: {event_data}\n\n"
+                    return
+                elif message_type == "function":
+                    function_message = f"Function {message} called"
+                    event_data = json.dumps({'content': function_message})
+                    yield f"data: {event_data}\n\n"
                 
 @bp.route('/chat', methods=['POST'])
 async def chat():

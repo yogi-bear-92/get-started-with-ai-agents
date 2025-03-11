@@ -54,12 +54,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         if enable_trace:
             try:
-                application_insights_conn_str = await ai_client.telemetry.get_connection_string()
-                if not application_insights_conn_str:
+                application_insights_connection_string = await ai_client.telemetry.get_connection_string()
+                if not application_insights_connection_string:
                     logger.warning("App Insights not enabled. Enable it in your AI Foundry project page.")
                     sys.exit(1)
                 else:
-                    configure_azure_monitor(connection_string=application_insights_conn_str)
+                    configure_azure_monitor(connection_string=application_insights_connection_string)
             except Exception as e:
                 logger.error("Failed to retrieve App Insights connection string.", exc_info=True)
                 sys.exit(1)
@@ -78,10 +78,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             agent_name = os.environ["AZURE_AI_AGENT_NAME"]
             agent_list = await ai_client.agents.list_agents()
             if agent_list.data:
-                for a_obj in agent_list.data:
-                    if a_obj.name == agent_name:
-                        agent = a_obj
-                        logger.info(f"Found agent by name '{agent_name}', ID={a_obj.id}")
+                for agent_object in agent_list.data:
+                    if agent_object.name == agent_name:
+                        agent = agent_object
+                        logger.info(f"Found agent by name '{agent_name}', ID={agent_object.id}")
                         break
 
         if not agent:

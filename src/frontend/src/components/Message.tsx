@@ -1,7 +1,12 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
-const Message = ({ content, role }) => {
+interface MessageProps {
+  content: string;
+  role: 'user' | 'assistant';
+}
+
+const Message: React.FC<MessageProps> = ({ content, role }) => {
   const isUser = role === 'user';
   
   return (

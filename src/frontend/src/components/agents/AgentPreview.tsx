@@ -1,0 +1,217 @@
+import { ReactNode, useState } from "react";
+import {
+  Body1,
+  Button,
+  Caption1,
+  Title2,
+  Tooltip,
+} from "@fluentui/react-components";
+import {
+  bundleIcon,
+  ChatRegular,
+  MoreHorizontalFilled,
+  MoreHorizontalRegular,
+  PersonFeedbackRegular,
+  Settings24Regular,
+  ShieldRegular,
+  TextAlignLeftRegular,
+} from "@fluentui/react-icons";
+
+import { AgentIcon } from "./AgentIcon";
+import { SettingsPanel } from "../core/SettingsPanel";
+import { AgentPreviewChatBot } from "./AgentPreviewChatBot";
+import { IChatItem } from "./chatbot/types";
+
+import styles from "./AgentPreview.module.css";
+
+const MoreIcon = bundleIcon(MoreHorizontalFilled, MoreHorizontalRegular);
+
+interface IAgent {
+  id: string;
+  name: string;
+  description?: string;
+  logo?: string;
+}
+
+interface IAgentPreviewProps {
+  resourceId: string;
+  agentDetails: IAgent;
+}
+
+interface IMenuItemConfig {
+  key: string;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+}
+
+export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  const [messageList, setMessageList] = useState<IChatItem[]>([]);
+  const [isResponding, setIsResponding] = useState(false);
+
+  const handleSettingsPanelOpenChange = (isOpen: boolean) => {
+    setIsSettingsPanelOpen(isOpen);
+  };
+
+  const newThread = () => {
+    setMessageList([]);
+  };
+
+  const onSend = (message: string) => {
+    // Add user message
+    const userMessage: IChatItem = {
+      id: `user-${Date.now()}`,
+      content: message,
+      role: "user",
+      more: { time: new Date().toISOString() },
+    };
+
+    setMessageList((prev) => [...prev, userMessage]);
+    setIsResponding(true);
+
+    // Simulate agent response after a delay
+    setTimeout(() => {
+      const botMessage: IChatItem = {
+        id: `bot-${Date.now()}`,
+        content: `This is a simulated response to: "${message}"`,
+        isAnswer: true,
+        more: { time: new Date().toISOString() },
+      };
+
+      setMessageList((prev) => [...prev, botMessage]);
+      setIsResponding(false);
+    }, 1000);
+  };
+
+  const menuItems: IMenuItemConfig[] = [
+    {
+      key: "settings",
+      children: "Settings",
+      icon: <Settings24Regular aria-hidden={true} />,
+      onClick() {
+        setIsSettingsPanelOpen(true);
+      },
+    },
+    {
+      key: "terms",
+      children: (
+        <a
+          className={styles.externalLink}
+          href="https://aka.ms/aistudio/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Terms of Use
+        </a>
+      ),
+      icon: <TextAlignLeftRegular aria-hidden={true} />,
+    },
+    {
+      key: "privacy",
+      children: (
+        <a
+          className={styles.externalLink}
+          href="https://go.microsoft.com/fwlink/?linkid=521839"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Privacy
+        </a>
+      ),
+      icon: <ShieldRegular aria-hidden={true} />,
+    },
+    {
+      key: "feedback",
+      children: "Send Feedback",
+      icon: <PersonFeedbackRegular aria-hidden={true} />,
+      onClick() {
+        // Handle send feedback click
+        alert("Thank you for your feedback!");
+      },
+    },
+  ];
+
+  const chatContext = {
+    messageList,
+    isResponding,
+    onSend,
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <div className={styles.leftSection}>
+          {messageList.length > 0 && (
+            <>
+              <AgentIcon
+                alt=""
+                iconClassName={styles.agentIcon}
+                iconName={agentDetails.logo}
+              />
+              <Body1 className={styles.agentName}>{agentDetails.name}</Body1>
+            </>
+          )}
+        </div>
+        <div className={styles.rightSection}>
+          <Button
+            appearance="subtle"
+            icon={<ChatRegular aria-hidden={true} />}
+            onClick={newThread}
+          >
+            New Chat
+          </Button>
+          <Tooltip content="Settings" relationship="label">
+            <div className={styles.menuButtonContainer}>
+              <div className={styles.menuButton}>
+                <Button
+                  appearance="subtle"
+                  icon={<MoreIcon />}
+                  onClick={() => setIsSettingsPanelOpen(true)}
+                />
+                <div className={styles.menu}>
+                  {menuItems.map((item) => (
+                    <div
+                      key={item.key}
+                      className={styles.menuItem}
+                      onClick={item.onClick}
+                    >
+                      {item.icon}
+                      <span>{item.children}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Tooltip>
+        </div>
+      </div>
+      <div className={styles.content}>
+        {messageList.length === 0 && (
+          <div className={styles.emptyChatContainer}>
+            <AgentIcon
+              alt=""
+              iconClassName={styles.emptyStateAgentIcon}
+              iconName={agentDetails.logo}
+            />
+            <Caption1 className={styles.agentName}>
+              {agentDetails.name}
+            </Caption1>
+            <Title2>How can I help you today?</Title2>
+          </div>
+        )}
+        <AgentPreviewChatBot
+          agentName={agentDetails.name}
+          agentLogo={agentDetails.logo}
+          chatContext={chatContext}
+        />
+      </div>
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={isSettingsPanelOpen}
+        onOpenChange={handleSettingsPanelOpenChange}
+      />
+    </div>
+  );
+}

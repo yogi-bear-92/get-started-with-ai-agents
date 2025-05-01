@@ -24,6 +24,7 @@
     "@fluentui/react-icons": "2.0.279",
     "@fluentui/react-theme": "9.1.24",
     "@vitejs/plugin-react": "4.4.1",
+    "clsx": "2.1.1",
     "copy-to-clipboard": "^3.3.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",

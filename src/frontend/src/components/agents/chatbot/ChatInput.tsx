@@ -1,15 +1,9 @@
-import React, {
-  useState,
-  FormEvent,
-  KeyboardEvent,
-  useRef,
-  useEffect,
-} from "react";
-import { Button, Input, Tooltip } from "@fluentui/react-components";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  SendRegular,
-  ArrowCounterclockwiseRegular,
-} from "@fluentui/react-icons";
+  ChatInput as ChatInputFluent,
+  ImperativeControlPlugin,
+  ImperativeControlPluginRef,
+} from "@fluentui-copilot/react-copilot";
 import { ChatInputProps } from "./types";
 
 import styles from "./ChatInput.module.css";
@@ -20,65 +14,44 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   currentUserMessage,
 }) => {
   const [inputText, setInputText] = useState<string>("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const controlRef = useRef<ImperativeControlPluginRef>(null);
 
   useEffect(() => {
     if (currentUserMessage !== undefined) {
-      setInputText(currentUserMessage);
+      controlRef.current?.setInputText(currentUserMessage ?? "");
     }
   }, [currentUserMessage]);
-
-  const handleSubmit = (e?: FormEvent): void => {
-    e?.preventDefault();
-    if (inputText.trim() && !isGenerating) {
-      onSubmit(inputText.trim());
+  const onMessageSend = (text: string): void => {
+    if (text && text.trim() !== "") {
+      onSubmit(text.trim());
       setInputText("");
+      controlRef.current?.setInputText("");
     }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
-  const clearChat = (): void => {
-    window.location.reload();
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.chatInputContainer}>
-      <div className={styles.inputWrapper}>
-        <Tooltip content="Clear Chat" relationship="label">
-          <Button
-            appearance="subtle"
-            icon={<ArrowCounterclockwiseRegular />}
-            onClick={clearChat}
-            disabled={isGenerating}
-          />
-        </Tooltip>
-
-        <Input
-          ref={inputRef}
-          className={styles.textInput}
-          placeholder="Type your message here..."
-          value={inputText}
-          onChange={(_, data) => setInputText(data.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isGenerating}
-        />
-
-        <Tooltip content="Send Message" relationship="label">
-          <Button
-            appearance="primary"
-            icon={<SendRegular />}
-            type="submit"
-            disabled={isGenerating || !inputText.trim()}
-          />
-        </Tooltip>
-      </div>
-    </form>
+    <div className={styles.chatInputContainer}>
+      <ChatInputFluent
+        aria-label="Chat Input"
+        charactersRemainingMessage={(_value: number) => ``} // needed per fluentui-copilot API
+        data-testid="chat-input"
+        disableSend={isGenerating}
+        history={true}
+        isSending={isGenerating}
+        onChange={(
+          _: React.ChangeEvent<HTMLInputElement>,
+          d: { value: string }
+        ) => {
+          setInputText(d.value);
+        }}
+        onSubmit={() => {
+          onMessageSend(inputText ?? "");
+        }}
+        placeholderValue="Type your message here..."
+      >
+        <ImperativeControlPlugin ref={controlRef} />
+      </ChatInputFluent>
+    </div>
   );
 };
 

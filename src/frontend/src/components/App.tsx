@@ -1,4 +1,5 @@
 import React from "react";
+import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 import { AgentPreview } from "./agents/AgentPreview";
 
 const App: React.FC = () => {
@@ -11,12 +12,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-container">
-      <AgentPreview
-        resourceId="sample-resource-id"
-        agentDetails={mockAgentDetails}
-      />
-    </div>
+    <FluentProvider theme={webLightTheme}>
+      <div className="app-container">
+        <AgentPreview
+          resourceId="sample-resource-id"
+          agentDetails={mockAgentDetails}
+        />
+      </div>
+    </FluentProvider>
   );
 };
 

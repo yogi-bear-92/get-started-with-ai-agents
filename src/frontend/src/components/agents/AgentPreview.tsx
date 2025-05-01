@@ -1,30 +1,14 @@
 import { ReactNode, useState } from "react";
-import {
-  Body1,
-  Button,
-  Caption1,
-  Title2,
-  Tooltip,
-} from "@fluentui/react-components";
-import {
-  bundleIcon,
-  ChatRegular,
-  MoreHorizontalFilled,
-  MoreHorizontalRegular,
-  PersonFeedbackRegular,
-  Settings24Regular,
-  ShieldRegular,
-  TextAlignLeftRegular,
-} from "@fluentui/react-icons";
+import { Body1, Button, Caption1, Title2 } from "@fluentui/react-components";
+import { ChatRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
 
 import { AgentIcon } from "./AgentIcon";
 import { SettingsPanel } from "../core/SettingsPanel";
 import { AgentPreviewChatBot } from "./AgentPreviewChatBot";
+import { MenuButton } from "../core/MenuButton/MenuButton";
 import { IChatItem } from "./chatbot/types";
 
 import styles from "./AgentPreview.module.css";
-
-const MoreIcon = bundleIcon(MoreHorizontalFilled, MoreHorizontalRegular);
 
 interface IAgent {
   id: string;
@@ -36,13 +20,6 @@ interface IAgent {
 interface IAgentPreviewProps {
   resourceId: string;
   agentDetails: IAgent;
-}
-
-interface IMenuItemConfig {
-  key: string;
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-  onClick?: () => void;
 }
 
 export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
@@ -83,13 +60,11 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       setIsResponding(false);
     }, 1000);
   };
-
-  const menuItems: IMenuItemConfig[] = [
+  const menuItems = [
     {
       key: "settings",
       children: "Settings",
-      icon: <Settings24Regular aria-hidden={true} />,
-      onClick() {
+      onClick: () => {
         setIsSettingsPanelOpen(true);
       },
     },
@@ -105,7 +80,6 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
           Terms of Use
         </a>
       ),
-      icon: <TextAlignLeftRegular aria-hidden={true} />,
     },
     {
       key: "privacy",
@@ -119,13 +93,11 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
           Privacy
         </a>
       ),
-      icon: <ShieldRegular aria-hidden={true} />,
     },
     {
       key: "feedback",
       children: "Send Feedback",
-      icon: <PersonFeedbackRegular aria-hidden={true} />,
-      onClick() {
+      onClick: () => {
         // Handle send feedback click
         alert("Thank you for your feedback!");
       },
@@ -154,36 +126,23 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
           )}
         </div>
         <div className={styles.rightSection}>
+          {" "}
           <Button
             appearance="subtle"
             icon={<ChatRegular aria-hidden={true} />}
             onClick={newThread}
           >
             New Chat
-          </Button>
-          <Tooltip content="Settings" relationship="label">
-            <div className={styles.menuButtonContainer}>
-              <div className={styles.menuButton}>
-                <Button
-                  appearance="subtle"
-                  icon={<MoreIcon />}
-                  onClick={() => setIsSettingsPanelOpen(true)}
-                />
-                <div className={styles.menu}>
-                  {menuItems.map((item) => (
-                    <div
-                      key={item.key}
-                      className={styles.menuItem}
-                      onClick={item.onClick}
-                    >
-                      {item.icon}
-                      <span>{item.children}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Tooltip>
+          </Button>{" "}
+          <MenuButton
+            menuButtonText=""
+            menuItems={menuItems}
+            menuButtonProps={{
+              appearance: "subtle",
+              icon: <MoreHorizontalRegular />,
+              "aria-label": "Settings",
+            }}
+          />
         </div>
       </div>
       <div className={styles.content}>

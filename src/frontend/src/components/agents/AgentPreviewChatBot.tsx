@@ -5,6 +5,7 @@ import { ChatInput } from "./chatbot/ChatInput";
 import { AgentPreviewChatBotProps } from "./chatbot/types";
 
 import styles from "./AgentPreviewChatBot.module.css";
+import clsx from "clsx";
 
 export function AgentPreviewChatBot({
   agentName,
@@ -22,43 +23,36 @@ export function AgentPreviewChatBot({
     )?.content;
     setCurrentUserMessage(selectedMessage);
   };
+  const isEmpty = messageListFromChatContext.length === 0;
 
   return (
     <div
-      className={`${styles.chatContainer} ${
-        messageListFromChatContext.length === 0 ? styles.emptyChatContainer : ""
-      }`}
+      className={clsx(
+        styles.chatContainer,
+        isEmpty ? styles.emptyChatContainer : styles.hasMessages
+      )}
     >
-      <div className={styles.messagesContainer}>
-        {messageListFromChatContext.length > 0 ? (
-          <div className={styles.copilotChatContainer}>
-            {messageListFromChatContext.map((message, index, messageList) =>
-              message.isAnswer ? (
-                <AssistantMessage
-                  key={message.id}
-                  agentLogo={agentLogo}
-                  agentName={agentName}
-                  loadingState={
-                    index === messageList.length - 1 && chatContext.isResponding
-                      ? "loading"
-                      : "none"
-                  }
-                  message={message}
-                />
-              ) : (
-                <UserMessage
-                  key={message.id}
-                  message={message}
-                  onEditMessage={onEditMessage}
-                />
-              )
-            )}
-          </div>
-        ) : (
-          <div className={styles.emptyState}>
-            <h2>Start a new conversation</h2>
-            <p>Type a message below to begin chatting with the AI agent</p>
-          </div>
+      <div className={styles.copilotChatContainer}>
+        {messageListFromChatContext.map((message, index, messageList) =>
+          message.isAnswer ? (
+            <AssistantMessage
+              key={message.id}
+              agentLogo={agentLogo}
+              agentName={agentName}
+              loadingState={
+                index === messageList.length - 1 && chatContext.isResponding
+                  ? "loading"
+                  : "none"
+              }
+              message={message}
+            />
+          ) : (
+            <UserMessage
+              key={message.id}
+              message={message}
+              onEditMessage={onEditMessage}
+            />
+          )
         )}
       </div>
       <div className={styles.inputContainer}>

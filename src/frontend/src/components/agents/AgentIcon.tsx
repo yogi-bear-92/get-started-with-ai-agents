@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-import styles from './AgentIcon.module.css';
+import styles from "./AgentIcon.module.css";
 
 export interface IAgentIconProps {
   /**
@@ -21,16 +21,16 @@ export interface IAgentIconProps {
 }
 
 export function AgentIcon({
-  iconName = 'Avatar_Default.svg',
+  iconName = "Avatar_Default.svg",
   iconClassName,
-  alt = '',
+  alt = "",
 }: IAgentIconProps): ReactNode {
   return (
     <div className={styles.iconContainer}>
       <img
         alt={alt}
         className={iconClassName ?? styles.icon}
-        src={`/images/template-images/${iconName}`}
+        src={`static/assets/template-images/${iconName}`}
       />
     </div>
   );

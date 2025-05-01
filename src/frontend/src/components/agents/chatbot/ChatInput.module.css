@@ -1,23 +1,24 @@
 .chatInputContainer {
-  padding: 12px;
-  display: flex;
-  align-items: flex-end;
-  background-color: var(--colorNeutralBackground1);
+  background-color: var(--colorNeutralBackground3);
   border-top: 1px solid var(--colorNeutralStroke1);
 }
 
-.inputWrapper {
-  display: flex;
-  flex-grow: 1;
-  gap: 8px;
-  align-items: center;
+/* Customize the Fluent ChatInput container */
+.chatInputContainer > div {
+  padding: 12px;
+  border: none;
+  background-color: var(--colorNeutralBackground3);
 }
 
-.textInput {
-  flex-grow: 1;
+/* Custom textarea height for the Fluent ChatInput */
+.chatInputContainer :global(.fui-ChatInput__textarea) {
+  max-height: 150px;
+  font-size: 14px;
+  line-height: 20px;
 }
 
-.actionButton {
+/* Customize the send button in Fluent ChatInput */
+.chatInputContainer :global(.fui-ChatInput__send-button) {
   display: flex;
   align-items: center;
   justify-content: center;

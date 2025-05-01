@@ -38,25 +38,31 @@
 }
 
 .content {
+  display: flex;
   flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.emptyChatContainer {
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  text-align: center;
-  gap: 1rem;
+
+  box-sizing: border-box;
+  width: 50%;
+  margin: 5px auto;
 }
 
 .menuButtonContainer {
   position: relative;
   display: inline-block;
+}
+
+.emptyChatContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+
+  padding: 24px;
+
+  text-align: center;
 }
 
 .menuButton {

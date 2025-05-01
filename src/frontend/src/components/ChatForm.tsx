@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 
-const ChatForm = ({ onSubmit, isGenerating }) => {
-  const [message, setMessage] = useState('');
+interface ChatFormProps {
+  onSubmit: (message: string) => void;
+  isGenerating: boolean;
+}
 
-  const handleSubmit = (e) => {
+const ChatForm: React.FC<ChatFormProps> = ({ onSubmit, isGenerating }) => {
+  const [message, setMessage] = useState<string>('');
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     if (message.trim() && !isGenerating) {
       onSubmit(message);
@@ -11,7 +16,7 @@ const ChatForm = ({ onSubmit, isGenerating }) => {
     }
   };
 
-  const clearChat = () => {
+  const clearChat = (): void => {
     // We'll implement this to match the existing functionality
     window.location.reload();
   };
@@ -23,29 +28,26 @@ const ChatForm = ({ onSubmit, isGenerating }) => {
           <button 
             type="button" 
             className="btn btn-outline-dark" 
-            onClick={clearChat}
-            aria-label="Start a new chat">
-            <i className="bi bi-arrow-repeat" aria-hidden="true"></i>
+            onClick={clearChat}>
+            <i className="bi bi-arrow-repeat"></i>
           </button>
-          <i className="bi bi-body-text input-group-text dark-border" aria-hidden="true"></i>
+          <i className="bi bi-body-text input-group-text dark-border"></i>
           <input 
             id="message" 
             name="message" 
             className="form-control form-control-sm dark-border" 
             type="text" 
-            placeholder="Your Message" 
-            aria-label="Ask ChatGPT"
+            placeholder="Your Message"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
             disabled={isGenerating}
           />
           <button 
             type="submit" 
             className="btn btn-outline-dark" 
-            style={{ borderLeftWidth: 0 }} 
-            aria-label="Submit"
+            style={{ borderLeftWidth: 0 }}
             disabled={isGenerating}>
-            Send <i className="bi bi-send-fill" aria-hidden="true"></i>
+            Send <i className="bi bi-send-fill"></i>
           </button>
         </div>
       </form>

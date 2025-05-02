@@ -5,9 +5,24 @@
 export interface IFileEntity {
   id: string;
   name: string;
-  contentType: string;
-  size?: number;
+  size: number;
+  status?:
+    | "pending"
+    | "uploading"
+    | "uploaded"
+    | "error"
+    | "deleting"
+    | "processed";
+  type: string;
+  progress?: boolean;
+  supportFileType?: string;
+  createdDate?: number;
+  originalFile?: File;
+  uploadedId?: string;
+  base64Url?: string;
   url?: string;
+  error?: string;
+  isRemote?: boolean;
 }
 
 export interface IChatItem {
@@ -47,8 +62,6 @@ export interface IAssistantMessageProps {
 export interface IUserMessageProps {
   message: IChatItem;
   onEditMessage: (messageId: string) => void;
-  onRemoveAttachment?: (messageId: string, attachmentId: string) => void;
-  onAttachmentPreview?: (attachment: IFileEntity) => void;
 }
 
 export interface ChatContextType {

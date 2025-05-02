@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AssistantMessage } from "./AssistantMessage";
 import { UserMessage } from "./UserMessage";
 import { ChatInput } from "./chatbot/ChatInput";
@@ -15,7 +15,11 @@ export function AgentPreviewChatBot({
   const [currentUserMessage, setCurrentUserMessage] = useState<
     string | undefined
   >();
-  const messageListFromChatContext = chatContext.messageList || [];
+
+  const messageListFromChatContext = useMemo(
+    () => chatContext.messageList ?? [],
+    [chatContext.messageList]
+  );
 
   const onEditMessage = (messageId: string) => {
     const selectedMessage = messageListFromChatContext.find(
@@ -23,38 +27,44 @@ export function AgentPreviewChatBot({
     )?.content;
     setCurrentUserMessage(selectedMessage);
   };
+
   const isEmpty = messageListFromChatContext.length === 0;
 
   return (
     <div
       className={clsx(
         styles.chatContainer,
-        isEmpty ? styles.emptyChatContainer : styles.hasMessages
+        isEmpty ? styles.emptyChatContainer : undefined
       )}
     >
-      <div className={styles.copilotChatContainer}>
-        {messageListFromChatContext.map((message, index, messageList) =>
-          message.isAnswer ? (
-            <AssistantMessage
-              key={message.id}
-              agentLogo={agentLogo}
-              agentName={agentName}
-              loadingState={
-                index === messageList.length - 1 && chatContext.isResponding
-                  ? "loading"
-                  : "none"
-              }
-              message={message}
-            />
-          ) : (
-            <UserMessage
-              key={message.id}
-              message={message}
-              onEditMessage={onEditMessage}
-            />
-          )
-        )}
-      </div>
+      {!isEmpty ? (
+        <div className={styles.copilotChatContainer}>
+          {messageListFromChatContext.map((message, index, messageList) =>
+            message.isAnswer ? (
+              <AssistantMessage
+                key={message.id}
+                agentLogo={agentLogo}
+                agentName={agentName}
+                loadingState={
+                  index === messageList.length - 1 && chatContext.isResponding
+                    ? "loading"
+                    : "none"
+                }
+                message={message}
+              />
+            ) : (
+              <UserMessage
+                key={message.id}
+                message={message}
+                onEditMessage={onEditMessage}
+              />
+            )
+          )}
+        </div>
+      ) : (
+        // Empty div needed for proper animation when transitioning to non-empty state
+        <div />
+      )}
       <div className={styles.inputContainer}>
         <ChatInput
           currentUserMessage={currentUserMessage}

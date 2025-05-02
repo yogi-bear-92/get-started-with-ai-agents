@@ -1,12 +1,18 @@
 import { Button, Spinner } from "@fluentui/react-components";
 import { bundleIcon, DeleteFilled, DeleteRegular } from "@fluentui/react-icons";
+import { CopilotMessageV2 as CopilotMessage } from "@fluentui-copilot/react-copilot-chat";
+import {
+  ReferenceListV2 as ReferenceList,
+  ReferenceOverflowButton,
+} from "@fluentui-copilot/react-reference";
 import { Suspense } from "react";
 
 import { Markdown } from "../core/Markdown";
 import { UsageInfo } from "./UsageInfo";
 import { IAssistantMessageProps } from "./chatbot/types";
 
-import styles from "./AssistantMessage.module.css";
+import styles from "./AgentPreviewChatBot.module.css";
+import { AgentIcon } from "./AgentIcon";
 
 const DeleteIcon = bundleIcon(DeleteFilled, DeleteRegular);
 
@@ -19,67 +25,62 @@ export function AssistantMessage({
   onDelete,
 }: IAssistantMessageProps): React.JSX.Element {
   const hasAnnotations = message.annotations && message.annotations.length > 0;
+  const references = hasAnnotations
+    ? message.annotations?.map((annotation, index) => (
+        <div key={index} className="reference-item">
+          {annotation.text || annotation.file_name}
+        </div>
+      ))
+    : [];
 
   return (
-    <div className={styles.assistantMessageContainer}>
-      <div className={styles.messageHeader}>
-        <div className={styles.avatarAndName}>
-          {agentLogo && (
-            <div className={styles.avatar}>
-              <img src={agentLogo} alt="" className={styles.avatarImage} />
-            </div>
-          )}
-          <span className={styles.botName}>{agentName ?? "Bot"}</span>
-        </div>
-        <div className={styles.actions}>
+    <CopilotMessage
+      key={message.id}
+      actions={
+        <span>
           {onDelete && message.usageInfo && (
             <Button
-              appearance="transparent"
+              appearance="subtle"
               icon={<DeleteIcon />}
               onClick={() => {
                 void onDelete(message.id);
               }}
             />
           )}
-        </div>
-      </div>
-
-      <div className={styles.messageContent}>
-        {loadingState === "loading" ? (
-          <Spinner size="small" />
-        ) : (
-          <Suspense fallback={<Spinner size="small" />}>
-            <Markdown content={message.content} />
-          </Suspense>
-        )}
-      </div>
-
-      {(hasAnnotations || (showUsageInfo && message.usageInfo)) && (
-        <div className={styles.messageFootnote}>
+        </span>
+      }
+      avatar={<AgentIcon alt="" iconName={agentLogo} />}
+      className={styles.copilotChatMessage}
+      disclaimer={<span>AI-generated content may be incorrect</span>}
+      footnote={
+        <>
           {hasAnnotations && (
-            <div className={styles.references}>
-              {/* Simple reference list implementation */}
-              <div className={styles.referenceList}>
-                {message.annotations?.map((annotation, index) => (
-                  <div key={index} className={styles.reference}>
-                    {annotation.text || annotation.file_name}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ReferenceList
+              maxVisibleReferences={3}
+              minVisibleReferences={2}
+              showLessButton={
+                <ReferenceOverflowButton>Show Less</ReferenceOverflowButton>
+              }
+              showMoreButton={
+                <ReferenceOverflowButton
+                  text={(overflowCount) => `+${overflowCount.toString()}`}
+                />
+              }
+            >
+              {references}
+            </ReferenceList>
           )}
-
           {showUsageInfo && message.usageInfo && (
             <UsageInfo info={message.usageInfo} duration={message.duration} />
           )}
-        </div>
-      )}
-
-      {message.content.includes("disclaimer") && (
-        <div className={styles.disclaimer}>
-          <span>AI-generated content may contain errors</span>
-        </div>
-      )}
-    </div>
+        </>
+      }
+      loadingState={loadingState}
+      name={agentName ?? "Bot"}
+    >
+      <Suspense fallback={<Spinner size="small" />}>
+        <Markdown content={message.content} />
+      </Suspense>
+    </CopilotMessage>
   );
 }

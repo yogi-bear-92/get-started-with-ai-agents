@@ -6,8 +6,6 @@ import {
 } from "@fluentui-copilot/react-copilot";
 import { ChatInputProps } from "./types";
 
-import styles from "./ChatInput.module.css";
-
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSubmit,
   isGenerating,
@@ -30,28 +28,26 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className={styles.chatInputContainer}>
-      <ChatInputFluent
-        aria-label="Chat Input"
-        charactersRemainingMessage={(_value: number) => ``} // needed per fluentui-copilot API
-        data-testid="chat-input"
-        disableSend={isGenerating}
-        history={true}
-        isSending={isGenerating}
-        onChange={(
-          _: React.ChangeEvent<HTMLInputElement>,
-          d: { value: string }
-        ) => {
-          setInputText(d.value);
-        }}
-        onSubmit={() => {
-          onMessageSend(inputText ?? "");
-        }}
-        placeholderValue="Type your message here..."
-      >
-        <ImperativeControlPlugin ref={controlRef} />
-      </ChatInputFluent>
-    </div>
+    <ChatInputFluent
+      aria-label="Chat Input"
+      charactersRemainingMessage={(_value: number) => ``} // needed per fluentui-copilot API
+      data-testid="chat-input"
+      disableSend={isGenerating}
+      history={true}
+      isSending={isGenerating}
+      onChange={(
+        _: React.ChangeEvent<HTMLInputElement>,
+        d: { value: string }
+      ) => {
+        setInputText(d.value);
+      }}
+      onSubmit={() => {
+        onMessageSend(inputText ?? "");
+      }}
+      placeholderValue="Type your message here..."
+    >
+      <ImperativeControlPlugin ref={controlRef} />
+    </ChatInputFluent>
   );
 };
 

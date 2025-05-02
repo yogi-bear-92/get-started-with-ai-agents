@@ -1,27 +1,84 @@
 .chatContainer {
   position: relative;
+
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  overflow: hidden;
-  background-color: var(--colorNeutralBackground1);
   gap: 16px;
+
+  width: 100%;
+  height: 100%;
+
+  > div:first-child {
+    overflow: hidden;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  div[role='feed'] {
+    overflow-y: auto;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    padding: 8px 12px 0;
+  }
 }
 
-/* When there are messages, make the chat fill the viewport */
+/* When there are messages, make the chat fill the available space */
 .hasMessages {
-  height: 100vh;
+  height: 100%;
 }
 
 .emptyChatContainer {
   height: auto;
 }
 
+.userMessage {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .copilotChatContainer {
+  transform: translateY(0);
+  
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  flex: 1;
+
+  border-radius: 8px;
+
+  opacity: 1;
+  background-color: var(--colorNeutralBackground3);
+
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+  animation: fade-in 0.3s ease-in-out;
 }
+
+@keyframes fade-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Transition for empty state to messages state */
+.emptyChatContainer + div div:empty + .inputContainer,
+.emptyChatContainer + .copilotChatContainer {
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
 
 .inputContainer {
   /* TODO: File an issue with Fluent team to allow for a safer override of the input box styles, or figure out a better approach to customize the chat input box styles */
@@ -69,9 +126,15 @@
   max-height: 100%;
 }
 
+.copilotChatMessage {
+  display: flex;
+  margin: 0 16px;
+  padding: 4px 0;
+}
+
 /* Transition for empty state to messages state */
-.emptyChatContainer + div div:empty + .inputContainer,
-.emptyChatContainer + div .copilotChatContainer {
+.emptyChatContainer .copilotChatContainer,
+.hasMessages .copilotChatContainer {
   transition:
     opacity 0.3s ease-in-out,
     transform 0.3s ease-in-out;

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { IThemeContextValue, Theme } from "./ThemeContext";
 import { darkTheme, lightTheme } from "./themes";
 
-const LOCAL_STORAGE_THEME_KEY = "app-theme-preference";
+const LOCAL_STORAGE_THEME_KEY = "get-started-with-agents-app-theme-preference";
 
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => {

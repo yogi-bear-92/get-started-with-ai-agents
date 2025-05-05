@@ -16,17 +16,17 @@ export const ThemePicker: React.FC = () => {
       {
         key: "Light",
         value: "Light",
-        text: "Light theme",
+        text: "Light",
       },
       {
         key: "Dark",
         value: "Dark",
-        text: "Dark theme",
+        text: "Dark",
       },
       {
         key: "System",
         value: "System",
-        text: "System theme",
+        text: "System",
       },
     ],
     []
@@ -35,7 +35,7 @@ export const ThemePicker: React.FC = () => {
   const selectedThemeText = useMemo(
     () =>
       options.find((opt) => opt.key === (savedTheme ?? "Light"))?.text ??
-      "Light theme",
+      "Light",
     [savedTheme, options]
   );
 

@@ -3,7 +3,7 @@ import { Body1, Button, Caption1, Title2 } from "@fluentui/react-components";
 import { ChatRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
 
 import { AgentIcon } from "./AgentIcon";
-import { SettingsPanel } from "../core/SettingsPanel";
+// import { SettingsPanel } from "../core/SettingsPanel";
 import { AgentPreviewChatBot } from "./AgentPreviewChatBot";
 import { MenuButton } from "../core/MenuButton/MenuButton";
 import { IChatItem } from "./chatbot/types";
@@ -23,13 +23,13 @@ interface IAgentPreviewProps {
 }
 
 export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
-  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+  // const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
   const [messageList, setMessageList] = useState<IChatItem[]>([]);
   const [isResponding, setIsResponding] = useState(false);
 
-  const handleSettingsPanelOpenChange = (isOpen: boolean) => {
-    setIsSettingsPanelOpen(isOpen);
-  };
+  // const handleSettingsPanelOpenChange = (isOpen: boolean) => {
+  //   setIsSettingsPanelOpen(isOpen);
+  // };
 
   const newThread = () => {
     setMessageList([]);
@@ -61,13 +61,13 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
     }, 1000);
   };
   const menuItems = [
-    {
-      key: "settings",
-      children: "Settings",
-      onClick: () => {
-        setIsSettingsPanelOpen(true);
-      },
-    },
+    // {
+    //   key: "settings",
+    //   children: "Settings",
+    //   onClick: () => {
+    //     setIsSettingsPanelOpen(true);
+    //   },
+    // },
     {
       key: "terms",
       children: (
@@ -167,10 +167,10 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       </div>
 
       {/* Settings Panel */}
-      <SettingsPanel
+      {/* <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onOpenChange={handleSettingsPanelOpenChange}
-      />
+      /> */}
     </div>
   );
 }

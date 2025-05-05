@@ -1,6 +1,6 @@
 import React from "react";
-import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 import { AgentPreview } from "./agents/AgentPreview";
+import { ThemeProvider } from "./core/theme/ThemeProvider";
 
 const App: React.FC = () => {
   // Sample agent details - in a real application, this would come from an API
@@ -12,14 +12,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <FluentProvider theme={webLightTheme}>
+    <ThemeProvider>
       <div className="app-container">
         <AgentPreview
           resourceId="sample-resource-id"
           agentDetails={mockAgentDetails}
         />
       </div>
-    </FluentProvider>
+    </ThemeProvider>
   );
 };
 

@@ -9,6 +9,7 @@ import {
 import { Dismiss24Regular } from "@fluentui/react-icons";
 
 import styles from "./SettingsPanel.module.css";
+import { ThemePicker } from "./theme/ThemePicker";
 
 export interface ISettingsPanelProps {
   isOpen: boolean;
@@ -44,10 +45,9 @@ export function SettingsPanel({
         >
           Settings
         </DrawerHeaderTitle>
-      </DrawerHeader>
+      </DrawerHeader>{" "}
       <DrawerBody className={styles.content}>
-        {/* Content will go here */}
-        <p>Settings panel content</p>
+        <ThemePicker />
       </DrawerBody>
     </Drawer>
   );

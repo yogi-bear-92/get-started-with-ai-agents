@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useMemo } from "react";
 import { Body1, Button, Caption1, Title2 } from "@fluentui/react-components";
 import { ChatRegular, MoreHorizontalRegular } from "@fluentui/react-icons";
 
@@ -47,7 +47,7 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
     setMessageList((prev) => [...prev, userMessage]);
     setIsResponding(true);
 
-    // Simulate agent response after a delay
+    // Simulate agent response after a delay. Can be removed when integrating with a real API.
     setTimeout(() => {
       const botMessage: IChatItem = {
         id: `bot-${Date.now()}`,
@@ -104,11 +104,14 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
     },
   ];
 
-  const chatContext = {
-    messageList,
-    isResponding,
-    onSend,
-  };
+  const chatContext = useMemo(
+    () => ({
+      messageList,
+      isResponding,
+      onSend,
+    }),
+    [messageList, isResponding]
+  );
 
   return (
     <div className={styles.container}>

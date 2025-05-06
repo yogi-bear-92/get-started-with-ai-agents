@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import MessageList from './MessageList';
 import ChatForm from './ChatForm';
 
-const ChatContainer = () => {
-  const [messages, setMessages] = useState([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+interface Message {
+  content: string;
+  role: 'user' | 'assistant';
+}
 
-  const addMessage = (content, role) => {
+const ChatContainer: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+
+  const addMessage = (content: string, role: 'user' | 'assistant'): void => {
     setMessages(prev => [...prev, { content, role }]);
   };
 
-  const handleSubmit = async (userMessage) => {
+  const handleSubmit = async (userMessage: string): Promise<void> => {
     if (!userMessage.trim()) return;
     
     // Add user message to the chat

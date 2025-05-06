@@ -1,8 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import Message from './Message';
 
-const MessageList = ({ messages }) => {
-  const messagesEndRef = useRef(null);
+interface Message {
+  content: string;
+  role: 'user' | 'assistant';
+}
+
+interface MessageListProps {
+  messages: Message[];
+}
+
+const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to the bottom when new messages arrive
   useEffect(() => {

@@ -13,3 +13,12 @@ jobs:
       - name: Make all .sh files executable
         run: |
           find . -type f -name "*.sh" -exec chmod +x {} \;
+      - name: Commit and push permission changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet || git commit -m "Set execute permission on .sh files"
+          git push
+
+          

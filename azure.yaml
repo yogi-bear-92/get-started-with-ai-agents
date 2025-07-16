@@ -47,9 +47,6 @@ services:
     project: ./src
     language: py
     host: containerapp
-    docker:
-      image: api_and_frontend
-      remoteBuild: true
 pipeline:
   variables:
     - AZURE_RESOURCE_GROUP

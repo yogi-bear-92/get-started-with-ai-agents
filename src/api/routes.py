@@ -368,12 +368,12 @@ async def get_memory_analytics(user_id: str, _auth=auth_dependency):
     """Get advanced memory analytics for a user"""
     try:
         analytics = memory_manager.get_memory_analytics(user_id)
-        
+
         return JSONResponse(content={
             "analytics": analytics,
             "user_id": user_id
         })
-    
+
     except Exception as e:
         logger.error(f"Error getting memory analytics: {str(e)}")
         return JSONResponse(
@@ -384,7 +384,7 @@ async def get_memory_analytics(user_id: str, _auth=auth_dependency):
 
 @router.post("/api/memory/search/{user_id}")
 async def search_user_memories(
-    user_id: str, 
+    user_id: str,
     request: Request,
     _auth=auth_dependency
 ):
@@ -393,22 +393,23 @@ async def search_user_memories(
         body = await request.json()
         query = body.get("query", "")
         max_results = body.get("max_results", 5)
-        
+
         if not query.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
+            raise HTTPException(
+                status_code=400, detail="Query cannot be empty")
+
         memories = memory_manager.get_relevant_memories(
             user_id=user_id,
             query=query,
             max_results=max_results
         )
-        
+
         return JSONResponse(content={
             "query": query,
             "results": memories,
             "total_found": len(memories)
         })
-    
+
     except Exception as e:
         logger.error(f"Error searching memories: {str(e)}")
         return JSONResponse(

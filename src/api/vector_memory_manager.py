@@ -15,10 +15,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
+
 class VectorMemoryManager:
     """Enhanced memory manager with vector-based similarity search."""
-    
-    def __init__(self, 
+
+    def __init__(self,
                  storage_path: Optional[str] = None,
                  max_memory_items: int = 100,
                  memory_retention_days: int = 30,
@@ -37,7 +38,7 @@ class VectorMemoryManager:
         self.max_memory_items = max_memory_items
         self.memory_retention_days = memory_retention_days
         self.similarity_threshold = similarity_threshold
-        
+
         # Initialize TF-IDF vectorizer
         self.vectorizer = TfidfVectorizer(
             max_features=1000,
@@ -45,7 +46,7 @@ class VectorMemoryManager:
             ngram_range=(1, 2),
             lowercase=True
         )
-        
+
         # Cache for user memories to avoid repeated file reads
         self._memory_cache = {}
         self._vectorizer_fitted = False
@@ -65,7 +66,8 @@ class VectorMemoryManager:
 
     def _get_conversations_path(self, user_id: str) -> str:
         """Get the path to the user's conversations directory."""
-        conversations_dir = os.path.join(self._get_user_memory_path(user_id), 'conversations')
+        conversations_dir = os.path.join(
+            self._get_user_memory_path(user_id), 'conversations')
         os.makedirs(conversations_dir, exist_ok=True)
         return conversations_dir
 
@@ -73,10 +75,10 @@ class VectorMemoryManager:
         """Load all memories for a specific user."""
         if user_id in self._memory_cache:
             return self._memory_cache[user_id]
-        
+
         memories = []
         conversations_path = self._get_conversations_path(user_id)
-        
+
         try:
             for filename in os.listdir(conversations_path):
                 if filename.endswith('.json'):
@@ -86,7 +88,7 @@ class VectorMemoryManager:
                         memories.extend(conversation_data.get('memories', []))
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logger.warning(f"Error loading memories for user {user_id}: {e}")
-        
+
         # Cache the memories
         self._memory_cache[user_id] = memories
         return memories
@@ -95,24 +97,25 @@ class VectorMemoryManager:
         """Prepare text corpus for vectorization."""
         memories = self._load_user_memories(user_id)
         corpus = []
-        
+
         for memory in memories:
             # Combine query and response for better context
             text = f"{memory.get('query', '')} {memory.get('response', '')}"
             corpus.append(text.strip())
-        
+
         return corpus
 
     def _fit_vectorizer_if_needed(self, user_id: str):
         """Fit the vectorizer with user's memory corpus if not already fitted."""
         if not self._vectorizer_fitted or user_id not in self._memory_cache:
             corpus = self._prepare_text_corpus(user_id)
-            
+
             if corpus:  # Only fit if we have data
                 try:
                     self.vectorizer.fit(corpus)
                     self._vectorizer_fitted = True
-                    logger.info(f"Vectorizer fitted with {len(corpus)} documents for user {user_id}")
+                    logger.info(
+                        f"Vectorizer fitted with {len(corpus)} documents for user {user_id}")
                 except Exception as e:
                     logger.warning(f"Failed to fit vectorizer: {e}")
 
@@ -170,7 +173,8 @@ class VectorMemoryManager:
             if user_id in self._memory_cache:
                 del self._memory_cache[user_id]
 
-            logger.info(f"Stored memory for user {user_id}, thread {thread_id}")
+            logger.info(
+                f"Stored memory for user {user_id}, thread {thread_id}")
             return True
 
         except Exception as e:
@@ -195,13 +199,13 @@ class VectorMemoryManager:
         try:
             # Load user memories
             memories = self._load_user_memories(user_id)
-            
+
             if not memories or not query.strip():
                 return []
 
             # Prepare corpus for vectorization
             self._fit_vectorizer_if_needed(user_id)
-            
+
             if not self._vectorizer_fitted:
                 # Fallback to keyword-based search
                 return self._keyword_based_search(memories, query, max_results)
@@ -221,7 +225,8 @@ class VectorMemoryManager:
                 query_vector = self.vectorizer.transform([query])
 
                 # Calculate similarity scores
-                similarity_scores = cosine_similarity(query_vector, doc_vectors).flatten()
+                similarity_scores = cosine_similarity(
+                    query_vector, doc_vectors).flatten()
 
                 # Get relevant memories above threshold
                 relevant_indices = []
@@ -239,11 +244,13 @@ class VectorMemoryManager:
                     memory['similarity_score'] = float(score)
                     results.append(memory)
 
-                logger.info(f"Found {len(results)} relevant memories for user {user_id}")
+                logger.info(
+                    f"Found {len(results)} relevant memories for user {user_id}")
                 return results
 
             except Exception as e:
-                logger.warning(f"Vector search failed, falling back to keyword search: {e}")
+                logger.warning(
+                    f"Vector search failed, falling back to keyword search: {e}")
                 return self._keyword_based_search(memories, query, max_results)
 
         except Exception as e:
@@ -256,9 +263,10 @@ class VectorMemoryManager:
         scored_memories = []
 
         for memory in memories:
-            memory_text = f"{memory.get('query', '')} {memory.get('response', '')}".lower()
+            memory_text = f"{memory.get('query', '')} {memory.get('response', '')}".lower(
+            )
             memory_words = set(memory_text.split())
-            
+
             # Simple keyword overlap score
             overlap = len(query_words.intersection(memory_words))
             if overlap > 0:
@@ -275,7 +283,7 @@ class VectorMemoryManager:
         """Extract potential topics from query and response."""
         # Simple topic extraction - could be enhanced with NLP
         text = f"{query} {response}".lower()
-        
+
         # Common topic keywords
         topic_keywords = {
             'technical': ['api', 'code', 'programming', 'development', 'software'],
@@ -284,18 +292,18 @@ class VectorMemoryManager:
             'information': ['what', 'how', 'when', 'where', 'why', 'explain'],
             'configuration': ['setup', 'config', 'settings', 'install', 'configure']
         }
-        
+
         topics = []
         for topic, keywords in topic_keywords.items():
             if any(keyword in text for keyword in keywords):
                 topics.append(topic)
-        
+
         return topics
 
     def get_user_profile(self, user_id: str) -> Dict[str, Any]:
         """Get user profile with interaction history."""
         profile_path = self._get_user_profile_path(user_id)
-        
+
         default_profile = {
             "user_id": user_id,
             "created_at": datetime.now().isoformat(),
@@ -319,11 +327,11 @@ class VectorMemoryManager:
                             profile[key] = value
             else:
                 profile = default_profile
-            
+
             # Update memory stats
             memories = self._load_user_memories(user_id)
             profile["memory_stats"]["total_memories"] = len(memories)
-            
+
             return profile
 
         except Exception as e:
@@ -333,16 +341,16 @@ class VectorMemoryManager:
     def _update_user_interaction(self, user_id: str, query: str, response: str):
         """Update user profile with new interaction data."""
         profile = self.get_user_profile(user_id)
-        
+
         profile["last_interaction"] = datetime.now().isoformat()
         profile["total_interactions"] += 1
-        
+
         # Extract and update topics
         topics = self._extract_topics(query, response)
         for topic in topics:
             if topic not in profile["topics_of_interest"]:
                 profile["topics_of_interest"].append(topic)
-        
+
         # Save updated profile
         profile_path = self._get_user_profile_path(user_id)
         try:
@@ -354,19 +362,22 @@ class VectorMemoryManager:
     def format_context_for_agent(self, user_id: str, query: str) -> str:
         """Format memory context for agent consumption with enhanced relevance."""
         try:
-            relevant_memories = self.get_relevant_memories(user_id, query, max_results=3)
+            relevant_memories = self.get_relevant_memories(
+                user_id, query, max_results=3)
             profile = self.get_user_profile(user_id)
 
             if not relevant_memories and profile["total_interactions"] == 0:
                 return ""
 
             context_parts = ["## User Context Information"]
-            
+
             # User profile section
             context_parts.append(f"### User Profile")
-            context_parts.append(f"- Total interactions: {profile['total_interactions']}")
+            context_parts.append(
+                f"- Total interactions: {profile['total_interactions']}")
             if profile["topics_of_interest"]:
-                context_parts.append(f"- Interests: {', '.join(profile['topics_of_interest'])}")
+                context_parts.append(
+                    f"- Interests: {', '.join(profile['topics_of_interest'])}")
             if profile["preferences"]:
                 context_parts.append("- Preferences:")
                 for key, value in profile["preferences"].items():
@@ -378,14 +389,17 @@ class VectorMemoryManager:
                 for i, memory in enumerate(relevant_memories, 1):
                     timestamp = memory.get('timestamp', 'Unknown')
                     if timestamp != 'Unknown':
-                        date = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d')
+                        date = datetime.fromisoformat(
+                            timestamp).strftime('%Y-%m-%d')
                     else:
                         date = 'Unknown'
-                    
+
                     similarity = memory.get('similarity_score', 0)
-                    context_parts.append(f"Memory {i} ({date}, similarity: {similarity:.2f}):")
+                    context_parts.append(
+                        f"Memory {i} ({date}, similarity: {similarity:.2f}):")
                     context_parts.append(f"User asked: {memory['query']}")
-                    context_parts.append(f"Agent responded: {memory['response'][:200]}...")
+                    context_parts.append(
+                        f"Agent responded: {memory['response'][:200]}...")
 
             return "\n".join(context_parts)
 
@@ -396,17 +410,17 @@ class VectorMemoryManager:
     def update_user_profile(self, user_id: str, interaction_data: Dict[str, Any]):
         """Update user profile with additional interaction data."""
         profile = self.get_user_profile(user_id)
-        
+
         # Update preferences
         if "preferences" in interaction_data:
             profile["preferences"].update(interaction_data["preferences"])
-        
+
         # Add topics
         if "topic" in interaction_data:
             topic = interaction_data["topic"]
             if topic not in profile["topics_of_interest"]:
                 profile["topics_of_interest"].append(topic)
-        
+
         # Save updated profile
         profile_path = self._get_user_profile_path(user_id)
         try:
@@ -419,23 +433,23 @@ class VectorMemoryManager:
         """Get analytics about user's memory usage and patterns."""
         memories = self._load_user_memories(user_id)
         profile = self.get_user_profile(user_id)
-        
+
         if not memories:
             return {"total_memories": 0, "topics": [], "interaction_frequency": 0}
-        
+
         # Calculate analytics
         topics_count = {}
         total_query_length = 0
         total_response_length = 0
-        
+
         for memory in memories:
             topics = memory.get('topics', [])
             for topic in topics:
                 topics_count[topic] = topics_count.get(topic, 0) + 1
-            
+
             total_query_length += memory.get('query_length', 0)
             total_response_length += memory.get('response_length', 0)
-        
+
         # Get date range for frequency calculation
         dates = [datetime.fromisoformat(m['timestamp']) for m in memories]
         if dates:
@@ -443,7 +457,7 @@ class VectorMemoryManager:
             interaction_frequency = len(memories) / date_range
         else:
             interaction_frequency = 0
-        
+
         return {
             "total_memories": len(memories),
             "avg_query_length": total_query_length / len(memories) if memories else 0,

@@ -24,9 +24,10 @@ except ImportError as e:
     print(f"Warning: Could not import evaluation modules: {e}")
     EVALUATION_AVAILABLE = False
     # Create dummy functions if evaluation modules are not available
+
     def store_user_feedback(*args, **kwargs):
         return {"status": "evaluation_not_available"}
-    
+
     async def run_enhanced_evaluation(*args, **kwargs):
         return {"status": "evaluation_not_available"}
 

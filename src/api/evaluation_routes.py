@@ -15,6 +15,7 @@ from evals.enhanced_evaluation import store_user_feedback, run_enhanced_evaluati
 
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
+
 class FeedbackModel(BaseModel):
     """Model for user feedback submission"""
     query: str
@@ -27,7 +28,7 @@ class FeedbackModel(BaseModel):
 async def submit_feedback(feedback: FeedbackModel):
     """
     Submit user feedback about an agent response
-    
+
     This endpoint collects user feedback on agent responses, including:
     - Rating (1-5 scale)
     - Optional comments
@@ -44,7 +45,8 @@ async def submit_feedback(feedback: FeedbackModel):
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": f"Failed to store feedback: {str(e)}"}
+            content={"status": "error",
+                     "message": f"Failed to store feedback: {str(e)}"}
         )
 
 
@@ -52,45 +54,49 @@ async def submit_feedback(feedback: FeedbackModel):
 async def get_evaluation_results(latest: bool = Query(True, description="Get only latest evaluation results")):
     """
     Get agent evaluation results
-    
+
     Returns evaluation metrics from the most recent evaluation run or all available evaluation runs.
     """
-    results_path = Path(__file__).parent.parent / "evals" / "evaluation_results"
+    results_path = Path(__file__).parent.parent / \
+        "evals" / "evaluation_results"
     latest_path = results_path / "latest.json"
-    
+
     try:
         if not results_path.exists():
             return JSONResponse(
-                status_code=404, 
-                content={"status": "error", "message": "No evaluation results available"}
+                status_code=404,
+                content={"status": "error",
+                         "message": "No evaluation results available"}
             )
-            
+
         if latest and latest_path.exists():
             with open(latest_path, 'r') as f:
                 return json.load(f)
-                
+
         # Get all evaluation results if not latest
         if not latest:
             all_results = []
             result_files = list(results_path.glob("eval_results_*.json"))
-            
+
             for file_path in sorted(result_files, key=lambda x: x.stat().st_mtime, reverse=True):
                 with open(file_path, 'r') as f:
                     result = json.load(f)
                     result["filename"] = file_path.name
                     all_results.append(result)
-                    
+
             return {"status": "success", "results": all_results}
-            
+
         return JSONResponse(
             status_code=404,
-            content={"status": "error", "message": "No evaluation results available"}
+            content={"status": "error",
+                     "message": "No evaluation results available"}
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": f"Error retrieving evaluation results: {str(e)}"}
+            content={"status": "error",
+                     "message": f"Error retrieving evaluation results: {str(e)}"}
         )
 
 
@@ -98,18 +104,20 @@ async def get_evaluation_results(latest: bool = Query(True, description="Get onl
 async def run_evaluation(agent_id: Optional[str] = None):
     """
     Run agent evaluation
-    
+
     Trigger an evaluation run for the specified agent or the default agent.
     Results will be stored in the evaluation_results directory.
     """
     try:
         # Run evaluation in a background task
-        evaluation_task = asyncio.create_task(run_enhanced_evaluation(agent_id))
+        evaluation_task = asyncio.create_task(
+            run_enhanced_evaluation(agent_id))
         return {"status": "success", "message": "Evaluation started. Results will be available soon."}
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": f"Failed to start evaluation: {str(e)}"}
+            content={"status": "error",
+                     "message": f"Failed to start evaluation: {str(e)}"}
         )
 
 
@@ -117,18 +125,19 @@ async def run_evaluation(agent_id: Optional[str] = None):
 async def get_feedback_stats():
     """
     Get aggregated user feedback statistics
-    
+
     Returns statistics about user feedback, such as average ratings and feedback counts.
     """
-    feedback_path = Path(__file__).parent.parent / "evals" / "feedback_data.json"
-    
+    feedback_path = Path(__file__).parent.parent / \
+        "evals" / "feedback_data.json"
+
     try:
         if not feedback_path.exists():
             return {"status": "success", "message": "No feedback data available yet", "stats": {}}
-            
+
         with open(feedback_path, 'r') as f:
             feedback_data = json.load(f)
-            
+
         # Calculate aggregate statistics
         stats = {
             "total_feedback_count": 0,
@@ -136,40 +145,41 @@ async def get_feedback_stats():
             "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
             "top_queries": [],
         }
-        
+
         all_ratings = []
         query_counts = {}
-        
+
         for query, feedback_list in feedback_data.get("query_feedback", {}).items():
             query_counts[query] = len(feedback_list)
             stats["total_feedback_count"] += len(feedback_list)
-            
+
             for item in feedback_list:
                 rating = item.get("rating", 0)
                 if 1 <= rating <= 5:
                     all_ratings.append(rating)
                     stats["rating_distribution"][rating] += 1
-        
+
         # Calculate average rating
         if all_ratings:
             stats["average_rating"] = sum(all_ratings) / len(all_ratings)
-            
+
         # Get top 5 queries by feedback count
         top_queries = sorted(
-            query_counts.items(), 
-            key=lambda x: x[1], 
+            query_counts.items(),
+            key=lambda x: x[1],
             reverse=True
         )[:5]
-        
+
         stats["top_queries"] = [
-            {"query": query, "feedback_count": count} 
+            {"query": query, "feedback_count": count}
             for query, count in top_queries
         ]
-        
+
         return {"status": "success", "stats": stats}
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": f"Error retrieving feedback stats: {str(e)}"}
+            content={"status": "error",
+                     "message": f"Error retrieving feedback stats: {str(e)}"}
         )

@@ -81,6 +81,7 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
   const [messageList, setMessageList] = useState<IChatItem[]>([]);
   const [isResponding, setIsResponding] = useState(false);
   const [isLoadingChatHistory, setIsLoadingChatHistory] = useState(true);
+  const [currentPersonality, setCurrentPersonality] = useState<string>("default");
 
   const loadChatHistory = async () => {
     try {
@@ -151,6 +152,41 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
 
   const handleSettingsPanelOpenChange = (isOpen: boolean) => {
     setIsSettingsPanelOpen(isOpen);
+  };
+
+  const handlePersonalityChange = (personality: string) => {
+    if (personality !== currentPersonality) {
+      setCurrentPersonality(personality);
+
+      // Send the personality change to the backend
+      fetch('/agent/personality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personality: personality })
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Failed to update personality');
+          }
+        })
+        .then(data => {
+          // Show a message about agent recreation
+          alert(data.message || "Personality updated. Changes will be applied after agent recreation.");
+
+          // Restart the thread to apply the new personality
+          if (messageList.length > 0) {
+            if (confirm("Changing the agent personality requires restarting the conversation. Continue?")) {
+              newThread();
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error updating personality:', error);
+          alert('Failed to update personality. See console for details.');
+        });
+    }
   };
 
   const newThread = () => {
@@ -374,7 +410,7 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       const preprocessedContent = preprocessContent(
         accumulatedContent,
         annotations
-      ); 
+      );
       let htmlContent = preprocessedContent;
       if (!chatItem) {
         throw new Error("Message content div not found in the template.");
@@ -550,6 +586,7 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onOpenChange={handleSettingsPanelOpenChange}
+        onPersonalityChange={handlePersonalityChange}
       />
     </div>
   );

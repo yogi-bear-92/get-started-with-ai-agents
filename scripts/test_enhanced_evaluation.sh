@@ -32,7 +32,7 @@ python -m evals.enhanced_evaluation
 if [ -d "evals/evaluation_results" ] && [ "$(ls -A evals/evaluation_results)" ]; then
   echo "Evaluation completed successfully!"
   echo "Results saved in evals/evaluation_results/"
-  
+
   # Show the latest results file
   latest_file=$(ls -t evals/evaluation_results | head -1)
   echo "Latest results file: $latest_file"

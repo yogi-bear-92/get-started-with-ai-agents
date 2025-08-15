@@ -326,7 +326,7 @@ async def get_user_memory(user_id: str, _auth=auth_dependency):
     """Get user memory profile and recent conversations"""
     try:
         profile = memory_manager.get_user_profile(user_id)
-        recent_memories = memory_manager.get_relevant_memories(user_id, "", max_results=10)
+        recent_memories = memory_manager.get_relevant_memories(user_id, "", limit=10)
         
         return JSONResponse(content={
             "profile": profile,

@@ -44,6 +44,9 @@ This solution demonstrates how you can evaluate your agent's performance and qua
 - **AI Red Teaming Agent**<br/>
 Facilitates the creation of an AI Red Teaming Agent that can run batch automated scans for safety and security scans on your Agent solution to check your risk posture before deploying it into production.
 
+- **Multiple Agent Personalities**<br/>
+The solution supports configurable agent personalities, allowing you to customize the agent's behavior and communication style. Choose from predefined personalities like Customer Service, Technical Support, Sales Assistant, or Concierge, each with tailored instructions and temperature settings for different use cases.
+
 <br/>
 
 Here is a screenshot showing the chatting web application with requests and responses between the system and the user:
@@ -89,6 +92,72 @@ Once you have the agents and the web app working, you are encouraged to try one 
 - **[Agent Evaluation](./docs/other_features.md#agent-evaluation)** - Evaluate your agent's performance and quality using built-in evaluators for local development, continuous monitoring, and CI/CD integration.
 
 - **[AI Red Teaming Agent](./docs/other_features.md#ai-red-teaming-agent)** - Run automated security and safety scans on your agent solution to check your risk posture before production deployment.
+
+- **[Agent Personalities](#agent-personalities)** - Configure your agent's personality and behavior to suit different use cases such as customer service, technical support, or sales assistance.
+
+### Agent Personalities
+
+This solution supports multiple predefined agent personalities that you can configure to customize your agent's behavior and communication style. Each personality comes with tailored instructions and temperature settings optimized for specific use cases.
+
+#### Available Personalities
+
+| Personality | Description | Temperature | Best For |
+|-------------|-------------|-------------|----------|
+| **General Assistant** (default) | General purpose assistant for all types of queries | 0.7 | Balanced, versatile interactions |
+| **Customer Service** | Friendly, empathetic, and professional customer support | 0.6 | Customer support, issue resolution |
+| **Technical Support** | Knowledgeable, precise, methodical troubleshooting expert | 0.3 | Technical documentation, debugging |
+| **Sales Assistant** | Enthusiastic, persuasive, and product-focused | 0.8 | Product recommendations, sales |
+| **Concierge** | Sophisticated, courteous, personalized service | 0.7 | Hospitality, premium services |
+
+#### Configuration
+
+##### Setting Personality via Environment Variable
+
+Configure the agent personality by setting the `AZURE_AI_AGENT_PERSONALITY` environment variable:
+
+```bash
+# Set personality during deployment
+azd env set AZURE_AI_AGENT_PERSONALITY customer_service
+azd up
+```
+
+##### Available Personality Values
+
+- `default` - General purpose assistant (default if not specified)
+- `customer_service` - Customer service representative
+- `technical_support` - Technical support specialist  
+- `sales_assistant` - Sales assistant
+- `concierge` - Concierge assistant
+
+##### Frontend Personality Selection
+
+Users can also select personalities through the web interface:
+
+1. Open the application in your browser
+2. Click the **Settings** button (⚙️) in the top-right corner
+3. Choose your preferred personality from the **Agent Personality** section
+4. The selection persists in your browser for future sessions
+
+#### Creating Custom Personalities
+
+To create custom personalities, modify the `AGENT_PERSONALITIES` dictionary in `src/gunicorn.conf.py`:
+
+```python
+AGENT_PERSONALITIES = {
+    "my_custom_personality": {
+        "instructions_ai_search": "Your custom instructions for AI Search mode...",
+        "instructions_file_search": "Your custom instructions for File Search mode...", 
+        "temperature": 0.5,  # 0.0-1.0, lower = more focused, higher = more creative
+        "description": "Description of your custom personality"
+    }
+}
+```
+
+After adding custom personalities:
+1. Update the frontend `PersonalityPicker.tsx` to include your new option
+2. Rebuild and redeploy the application
+
+> **Note**: Changing agent personality requires agent recreation. If you have an existing agent, delete it from Azure AI Foundry before deploying with a new personality.
 
 ## Resource Clean-up
 

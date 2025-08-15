@@ -1,6 +1,6 @@
-# 📁 Project Structure Documentation
+## Internal Project Structure (Public docs removed)
 
-This document outlines the organized structure of the AI Agent project.
+This file retained only as an internal reference. Previous public-facing documentation (deployment, setup, customization, troubleshooting, features, personalities, search, evaluation guides) was removed per privatization directive.
 
 ## 🗂️ Root Directory (Clean Structure)
 
@@ -19,23 +19,16 @@ The root directory contains only essential project files:
 └── .vscode/                # VS Code settings
 ```
 
-## 📚 Documentation Structure
+## Remaining Internal Docs
 
-All documentation is organized under `docs/`:
+Only project-status notes kept:
 
 ```
-docs/
-├── community/              # Community and contribution guidelines
-│   ├── CODE_OF_CONDUCT.md
-│   ├── CONTRIBUTING.md
-│   ├── SECURITY.md
-│   └── SUPPORT.md
-├── project-status/         # Project status and implementation notes
-│   ├── MEMORY_IMPLEMENTATION_STATUS.md
-│   ├── SESSION_COMPLETE_SUMMARY.md
-│   ├── memory_test_results.md
-│   └── next-steps.md
-└── [existing docs...]      # Existing documentation files
+docs/project-status/
+	MEMORY_IMPLEMENTATION_STATUS.md
+	SESSION_COMPLETE_SUMMARY.md
+	memory_test_results.md
+	next-steps.md
 ```
 
 ## 🧪 Testing Structure
@@ -79,10 +72,9 @@ issues/         # Documented issues and solutions
 4. **Scalable**: Structure supports project growth
 5. **Developer Friendly**: Common conventions followed
 
-## 📖 Quick Navigation
+## Internal Navigation
 
-- **Getting Started**: See `README.md`
-- **Contributing**: See `docs/community/CONTRIBUTING.md`
-- **Project Status**: See `docs/project-status/`
-- **Testing**: See `tests/` directory
-- **Development**: See `src/` directory
+- Core overview: `README.md`
+- Status notes: `docs/project-status/`
+- Tests: `tests/`
+- Source: `src/`

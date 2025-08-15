@@ -1,3 +1,10 @@
+# Internal deployment workflow (sanitized for private repo)
+name: Deploy to Azure
+
+# Run only when manually triggered
+on:
+  workflow_dispatch:
+  # Automated triggers removed
 name: Deploy to Azure
 
 # Run only when manually triggered

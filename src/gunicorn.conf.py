@@ -36,17 +36,21 @@ logger = configure_logging(os.getenv("APP_LOG_FILE", ""))
 agentID = os.environ.get("AZURE_EXISTING_AGENT_ID") if os.environ.get(
     "AZURE_EXISTING_AGENT_ID") else os.environ.get(
         "AZURE_AI_AGENT_ID")
-    
+
 proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT")
 
-def list_files_in_files_directory() -> List[str]:    
+
+def list_files_in_files_directory() -> List[str]:
     # Get the absolute path of the 'files' directory
-    files_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
-    
+    files_directory = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'files'))
+
     # List all files in the 'files' directory
-    files = [f for f in os.listdir(files_directory) if os.path.isfile(os.path.join(files_directory, f))]
-    
+    files = [f for f in os.listdir(files_directory) if os.path.isfile(
+        os.path.join(files_directory, f))]
+
     return files
+
 
 FILES_NAMES = list_files_in_files_directory()
 
@@ -66,7 +70,7 @@ async def create_index_maybe(
     """
     from api.search_index_manager import SearchIndexManager
     endpoint = os.environ.get('AZURE_AI_SEARCH_ENDPOINT')
-    embedding = os.getenv('AZURE_AI_EMBED_DEPLOYMENT_NAME')    
+    embedding = os.getenv('AZURE_AI_EMBED_DEPLOYMENT_NAME')
     if endpoint and embedding:
         try:
             aoai_connection = await ai_client.connections.get_default(
@@ -74,7 +78,7 @@ async def create_index_maybe(
         except ValueError as e:
             logger.error("Error creating index: {e}")
             return
-        
+
         embed_api_key = None
         if aoai_connection.credentials and isinstance(aoai_connection.credentials, ApiKeyCredentials):
             embed_api_key = aoai_connection.credentials.api_key
@@ -145,7 +149,7 @@ async def get_available_tool(
     else:
         logger.info(
             "agent: index was not initialized, falling back to file search.")
-        
+
         # Upload files for file search
         for file_name in FILES_NAMES:
             file_path = _get_file_path(file_name)
@@ -170,13 +174,58 @@ async def create_agent(ai_client: AIProjectClient,
     tool = await get_available_tool(ai_client, creds)
     toolset = AsyncToolSet()
     toolset.add(tool)
-    
-    instructions = "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else "Use File Search always.  Avoid to use base knowledge."
-    
+
+    # Define predefined agent personalities
+    agent_personalities = {
+        "default": {
+            "instructions": "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else "Use File Search always. Avoid to use base knowledge.",
+            "temperature": 0.7,
+        },
+        "customer_service": {
+            "instructions": "You are a helpful customer service assistant. Always be polite, patient, and professional. " +
+            ("Use AI Search to find accurate information about our products and services. " if isinstance(tool, AzureAISearchTool) else "Use File Search to find accurate information about our products and services. ") +
+            "If you don't know the answer, admit it and offer to connect the customer with a human representative.",
+            "temperature": 0.5,
+        },
+        "technical_support": {
+            "instructions": "You are a technical support specialist. Provide clear, concise, and accurate technical information. " +
+            ("Use AI Search to find specific technical details. " if isinstance(tool, AzureAISearchTool) else "Use File Search to find specific technical details. ") +
+            "Use technical language when appropriate but be able to explain concepts in simpler terms when needed.",
+            "temperature": 0.3,
+        },
+        "sales_assistant": {
+            "instructions": "You are a sales assistant focused on helping customers find the right products. " +
+            ("Use AI Search to provide product information and make appropriate recommendations. " if isinstance(tool, AzureAISearchTool) else "Use File Search to provide product information and make appropriate recommendations. ") +
+            "Highlight product benefits and features that match customer needs without being pushy.",
+            "temperature": 0.6,
+        },
+        "concierge": {
+            "instructions": "You are a sophisticated and courteous concierge assistant. " +
+            ("Use AI Search to provide personalized recommendations and assistance. " if isinstance(tool, AzureAISearchTool) else "Use File Search to provide personalized recommendations and assistance. ") +
+            "Maintain a refined, professional tone while being warm and accommodating. Focus on providing exceptional service and attention to detail.",
+            "temperature": 0.7,
+        }
+    }
+
+    # Get the selected personality from environment variable or use default
+    selected_personality = os.environ.get(
+        "AZURE_AI_AGENT_PERSONALITY", "default")
+    if selected_personality not in agent_personalities:
+        logger.warning(
+            f"Unknown personality '{selected_personality}', falling back to default")
+        selected_personality = "default"
+
+    personality = agent_personalities[selected_personality]
+    instructions = personality["instructions"]
+    temperature = personality.get("temperature", 0.7)
+
+    logger.info(f"Creating agent with personality: {selected_personality}")
+
     agent = await ai_client.agents.create_agent(
         model=os.environ["AZURE_AI_AGENT_DEPLOYMENT_NAME"],
         name=os.environ["AZURE_AI_AGENT_NAME"],
         instructions=instructions,
+        temperature=temperature,
         toolset=toolset
     )
     return agent
@@ -215,7 +264,7 @@ async def initialize_resources():
                                 f", ID: {agent_object.id}")
                             os.environ["AZURE_EXISTING_AGENT_ID"] = agent_object.id
                             return
-                        
+
                 # Create a new agent
                 agent = await create_agent(ai_client, creds)
                 os.environ["AZURE_EXISTING_AGENT_ID"] = agent.id

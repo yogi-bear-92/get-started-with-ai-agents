@@ -29,6 +29,9 @@ The app code runs in Azure Container App to process the user input and generate 
 - **Knowledge Retrieval**<br/>
 The AI agent uses file search to retrieve knowledge from uploaded files.
 
+- **Customizable Agent Personalities**<br/>
+Multiple predefined agent personalities (customer service, technical support, sales) can be selected to provide specialized behavior for different use cases. [Learn more](./docs/agent_personalities.md).
+
 - **Customizable AI Model Deployment**<br/>
 The solution allows users to configure and deploy AI models, such as gpt-4o-mini, with options to adjust model capacity, and knowledge retrieval methods.
 
@@ -90,6 +93,45 @@ Once you have the agents and the web app working, you are encouraged to try one 
 
 - **[AI Red Teaming Agent](./docs/other_features.md#ai-red-teaming-agent)** - Run automated security and safety scans on your agent solution to check your risk posture before production deployment.
 
+- **[Agent Personalities](./docs/agent_personalities.md)** - Configure your agent's personality and behavior to suit different use cases such as customer service, technical support, sales assistance, or concierge services.
+
+### Agent Personalities
+
+This solution supports multiple predefined agent personalities that you can configure to customize your agent's behavior and communication style. Each personality comes with tailored instructions and temperature settings optimized for specific use cases.
+
+#### Available Personalities
+
+| Personality | Description | Temperature | Best For |
+|-------------|-------------|-------------|----------|
+| **General Assistant** (default) | General purpose assistant for all types of queries | 0.7 | Balanced, versatile interactions |
+| **Customer Service** | Friendly, empathetic, and professional customer support | 0.5 | Customer support, issue resolution |
+| **Technical Support** | Knowledgeable, precise, methodical troubleshooting expert | 0.3 | Technical documentation, debugging |
+| **Sales Assistant** | Enthusiastic, persuasive, and product-focused | 0.6 | Product recommendations, sales |
+| **Concierge** | Sophisticated, courteous, personalized service | 0.7 | Hospitality, premium services |
+
+#### Configuration
+
+##### Setting Personality via Environment Variable
+
+Configure the agent personality by setting the `AZURE_AI_AGENT_PERSONALITY` environment variable:
+
+```bash
+# Set personality during deployment
+azd env set AZURE_AI_AGENT_PERSONALITY customer_service
+azd up
+```
+
+##### Frontend Personality Selection
+
+Users can also select personalities through the web interface:
+
+1. Open the application in your browser
+2. Click the **Settings** button (⚙️) in the top-right corner
+3. Choose your preferred personality from the **Agent Personality** section
+4. The selection persists in your browser for future sessions
+
+See [Agent Personalities](./docs/agent_personalities.md) for more details on creating custom personalities.
+
 ## Resource Clean-up
 
 To prevent incurring unnecessary charges, it's important to clean up your Azure resources after completing your work with the application.
@@ -101,7 +143,7 @@ To prevent incurring unnecessary charges, it's important to clean up your Azure 
 
 - **Deleting Resources:**
   To delete all associated resources and shut down the application, execute the following command:
-  
+
     ```bash
     azd down
     ```
@@ -119,12 +161,12 @@ The majority of the Azure resources used in this infrastructure are on usage-bas
 
 You can try the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator) for the resources:
 
-- **Azure AI Foundry**: Free tier. [Pricing](https://azure.microsoft.com/pricing/details/ai-studio/)  
-- **Azure Storage Account**: Standard tier, LRS. Pricing is based on storage and operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)  
-- **Azure AI Services**: S0 tier, defaults to gpt-4o-mini. Pricing is based on token count. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/)  
-- **Azure Container App**: Consumption tier with 0.5 CPU, 1GiB memory/storage. Pricing is based on resource allocation, and each month allows for a certain amount of free usage. [Pricing](https://azure.microsoft.com/pricing/details/container-apps/)  
-- **Log analytics**: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)  
-- **Agent Evaluations**: Incurs the cost of your provided model deployment used for local evaluations.  
+- **Azure AI Foundry**: Free tier. [Pricing](https://azure.microsoft.com/pricing/details/ai-studio/)
+- **Azure Storage Account**: Standard tier, LRS. Pricing is based on storage and operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)
+- **Azure AI Services**: S0 tier, defaults to gpt-4o-mini. Pricing is based on token count. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/)
+- **Azure Container App**: Consumption tier with 0.5 CPU, 1GiB memory/storage. Pricing is based on resource allocation, and each month allows for a certain amount of free usage. [Pricing](https://azure.microsoft.com/pricing/details/container-apps/)
+- **Log analytics**: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
+- **Agent Evaluations**: Incurs the cost of your provided model deployment used for local evaluations.
 - **AI Red Teaming Agent**: Leverages Azure AI Risk and Safety Evaluations to assess attack success from the automated AI red teaming scan. Users are billed based on the consumption of Risk and Safety Evaluations as listed in [our Azure pricing page](https://azure.microsoft.com/pricing/details/ai-foundry/). Click on the tab labeled “Complete AI Toolchain” to view the pricing details.
 
 ⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
@@ -173,6 +215,6 @@ You must also comply with all domestic and international export laws and regulat
 
 You acknowledge that the Software and Microsoft Products and Services (1) are not designed, intended or made available as a medical device(s), and (2) are not designed or intended to be a substitute for professional medical advice, diagnosis, treatment, or judgment and should not be used to replace or as a substitute for professional medical advice, diagnosis, treatment, or judgment. Customer is solely responsible for displaying and/or obtaining appropriate consents, warnings, disclaimers, and acknowledgements to end users of Customer’s implementation of the Online Services.
 
-You acknowledge the Software is not subject to SOC 1 and SOC 2 compliance audits. No Microsoft technology, nor any of its component technologies, including the Software, is intended or made available as a substitute for the professional advice, opinion, or judgement of a certified financial services professional. Do not use the Software to replace, substitute, or provide professional financial advice or judgment.  
+You acknowledge the Software is not subject to SOC 1 and SOC 2 compliance audits. No Microsoft technology, nor any of its component technologies, including the Software, is intended or made available as a substitute for the professional advice, opinion, or judgement of a certified financial services professional. Do not use the Software to replace, substitute, or provide professional financial advice or judgment.
 
 BY ACCESSING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT THE SOFTWARE IS NOT DESIGNED OR INTENDED TO SUPPORT ANY USE IN WHICH A SERVICE INTERRUPTION, DEFECT, ERROR, OR OTHER FAILURE OF THE SOFTWARE COULD RESULT IN THE DEATH OR SERIOUS BODILY INJURY OF ANY PERSON OR IN PHYSICAL OR ENVIRONMENTAL DAMAGE (COLLECTIVELY, “HIGH-RISK USE”), AND THAT YOU WILL ENSURE THAT, IN THE EVENT OF ANY INTERRUPTION, DEFECT, ERROR, OR OTHER FAILURE OF THE SOFTWARE, THE SAFETY OF PEOPLE, PROPERTY, AND THE ENVIRONMENT ARE NOT REDUCED BELOW A LEVEL THAT IS REASONABLY, APPROPRIATE, AND LEGAL, WHETHER IN GENERAL OR IN A SPECIFIC INDUSTRY. BY ACCESSING THE SOFTWARE, YOU FURTHER ACKNOWLEDGE THAT YOUR HIGH-RISK USE OF THE SOFTWARE IS AT YOUR OWN RISK.

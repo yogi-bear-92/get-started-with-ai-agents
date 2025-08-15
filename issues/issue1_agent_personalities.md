@@ -1,4 +1,4 @@
-# Issue: Add Support for Multiple Agent Personalities
+# Issue: Add Support for Multiple Agent Personalities [COMPLETED]
 
 ## Description
 

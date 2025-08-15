@@ -1,252 +1,69 @@
-# Getting Started with Agents Using Azure AI Foundry
+## Internal AI Agent Platform (Private Repository)
 
-The agent leverages the Azure AI Agent service and utilizes file search for knowledge retrieval from uploaded files, enabling it to generate responses with citations. The solution also includes built-in monitoring capabilities with tracing to ensure easier troubleshooting and optimized performance.
+This repository contains an internal AI agent application built on Azure AI services (Agents, Search, Monitoring). It is now private; all public-facing artifacts (license, contribution guidelines, code of conduct, security policy) have been removed per instruction.
 
-<div style="text-align:center;">
+### Purpose
+Provide a customizable chat + retrieval + evaluation stack for internal experimentation, prototyping, and integration with downstream services.
 
-[**SOLUTION OVERVIEW**](#solution-overview) \| [**GETTING STARTED**](#getting-started) \| [**LOCAL DEVELOPMENT**](#local-development) \| [**OTHER FEATURES**](#other-features) \| [**RESOURCE CLEAN-UP**](#resource-clean-up) \| [**GUIDANCE**](#guidance) \| [**TROUBLESHOOTING**](./docs/troubleshooting.md)
+### High-Level Components
+- FastAPI backend (`src/api`) exposing chat, memory, search, evaluation hooks
+- Agent configuration & tools (`gunicorn.conf.py`)
+- Retrieval: vector + keyword memory plus optional Azure AI Search index management
+- Evaluation & red teaming utilities (`evals/`, `airedteaming/`)
+- Frontend React app (under `src/frontend`) served via FastAPI static build
 
-</div>
-
-## Solution Overview
-
-This solution deploys a web-based chat application with an AI agent running in Azure Container App.
-
-The agent leverages the Azure AI Agent service and utilizes Azure AI Search for knowledge retrieval from uploaded files, enabling it to generate responses with citations. The solution also includes built-in monitoring capabilities with tracing to ensure easier troubleshooting and optimized performance.
-
-This solution creates an Azure AI Foundry project and Azure AI services. More details about the resources can be found in the [resources](#resources) documentation. There are options to enable logging, tracing, and monitoring.
-
-Instructions are provided for deployment through GitHub Codespaces, VS Code Dev Containers, and your local development environment.
-
-### Solution Architecture
-
-![Architecture diagram showing that user input is provided to the Azure Container App, which contains the app code. With user identity and resource access through managed identity, the input is used to form a response. The input and the Azure monitor are able to use the Azure resources deployed in the solution: Application Insights, Azure AI Foundry Project, Azure AI Services, Storage account, Azure Container App, and Log Analytics Workspace.](docs/images/architecture.png)
-
-The app code runs in Azure Container App to process the user input and generate a response to the user. It leverages Azure AI projects and Azure AI services, including the model and agent.
-
-### Key Features
-
-- **Knowledge Retrieval**<br/>
-The AI agent uses enhanced file search to retrieve knowledge from uploaded files with improved citation handling and support for multiple file formats.
-
-- **Multiple Agent Personalities**<br/>
-Support for different agent personalities (default, customer service, technical support, sales assistant, concierge) to adapt to various use cases.
-
-- **Comprehensive Evaluation Framework**<br/>
-Advanced monitoring and evaluation capabilities including quality metrics, factual accuracy assessment, and user feedback collection.
-
-- **Customizable Agent Personalities**<br/>
-Multiple predefined agent personalities (customer service, technical support, sales) can be selected to provide specialized behavior for different use cases. [Learn more](./docs/agent_personalities.md).
-
-- **Customizable AI Model Deployment**<br/>
-The solution allows users to configure and deploy AI models, such as gpt-4o-mini, with options to adjust model capacity, and knowledge retrieval methods.
-
-- **Built-in Monitoring and Tracing**<br/>
-Integrated monitoring capabilities, including Azure Monitor and Application Insights, enable tracing and logging for easier troubleshooting and performance optimization.
-
-- **Flexible Deployment Options**<br/>
-The solution supports deployment through GitHub Codespaces, VS Code Dev Containers, or local environments, providing flexibility for different development workflows.
-
-- **Agent Evaluation**<br/>
-This solution demonstrates how you can evaluate your agent's performance and quality during local development and incorporate it into monitoring and CI/CD workflow.
-
-- **AI Red Teaming Agent**<br/>
-Facilitates the creation of an AI Red Teaming Agent that can run batch automated scans for safety and security scans on your Agent solution to check your risk posture before deploying it into production.
-
-<br/>
-
-Here is a screenshot showing the chatting web application with requests and responses between the system and the user:
-
-![Screenshot of chatting web application showing requests and responses between agent and the user.](docs/images/webapp_screenshot.png)
-
-## Getting Started
-
-| [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/get-started-with-ai-agents) | [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Azure-Samples/get-started-with-ai-agents) |
-|---|---|
-
-1. Click `Open in GitHub Codespaces` or `Dev Containers` button above
-2. Wait for the environment to load
-3. Run the following commands in the terminal:
-   ```bash
-   azd up
-   ```
-4. Follow the prompts to select your Azure subscription and region
-5. Wait for deployment to complete (5-20 minutes) - you'll get a web app URL when finished
-
-For detailed deployment options and troubleshooting, see the [full deployment guide](./docs/deployment.md).
-**After deployment, try these [sample questions](./docs/sample_questions.md) to test your agent.**
-
-## Local Development
-
-For developers who want to run the application locally or customize the agent:
-
-- **[Local Development Guide](./docs/local_development.md)** - Set up a local development environment, customize the frontend (starting with AgentPreview.tsx), modify agent instructions and tools, and use evaluation to improve your code.
-
-This guide covers:
-- Environment setup and prerequisites
-- Running the development server locally
-- Frontend customization and backend communication
-- Agent instructions and tools modification
-- File management and agent recreation
-- Using agent evaluation for code improvement
-
-## Other Features
-Once you have the agents and the web app working, you are encouraged to try one of the following:
-
-- **[Tracing and Monitoring](./docs/other_features.md#tracing-and-monitoring)** - View console logs in Azure portal and App Insights tracing in Azure AI Foundry for debugging and performance monitoring.
-
-- **[Agent Evaluation](./docs/other_features.md#agent-evaluation)** - Evaluate your agent's performance and quality using built-in evaluators for local development, continuous monitoring, and CI/CD integration.
-
-- **[AI Red Teaming Agent](./docs/other_features.md#ai-red-teaming-agent)** - Run automated security and safety scans on your agent solution to check your risk posture before production deployment.
-
-- **[Agent Personalities](./docs/agent_personalities.md)** - Configure your agent's personality and behavior to suit different use cases such as customer service, technical support, sales assistance, or concierge services.
-
-### Enhanced File Search
-
-This solution includes advanced file search capabilities with improved citation handling and support for multiple file formats:
-
-- **Multiple File Format Support**: Search across JSON, Markdown, Text, PDF, and Word documents
-- **Enhanced Citation System**: Clear references to source documents including file name, section, and metadata
-- **File Categorization**: Automatic categorization of files based on content and metadata
-- **Relevance Scoring**: Intelligent ranking of search results based on query relevance
-- **Semantic Chunking**: Better context extraction with semantic understanding of document structure
-
-#### Supported File Formats
-
-| Format | File Extension | Notes |
-|--------|---------------|-------|
-| JSON   | .json         | Structured data with metadata extraction |
-| Markdown | .md         | Text-based format with headers and sections |
-| Text   | .txt          | Plain text files |
-| PDF    | .pdf          | Requires PyPDF2 library |
-| Word   | .docx, .doc   | Requires python-docx library |
-
-To add the required dependencies for PDF and Word document support:
-
+### Quick Start (Internal)
 ```bash
-pip install -r src/requirements-enhanced.txt
+azd up                # First-time infra + deploy (ensure correct subscription)
+source .venv/bin/activate || python -m venv .venv && source .venv/bin/activate
+pip install -r src/requirements-dev.txt
+python -m uvicorn "api.main:create_app" --factory --reload --app-dir src
 ```
 
-### Agent Personalities
+Set required environment variables (see `azure.yaml`). Use `azd env set KEY VALUE` to persist.
 
-This solution supports multiple predefined agent personalities that you can configure to customize your agent's behavior and communication style. Each personality comes with tailored instructions and temperature settings optimized for specific use cases.
+### Common Env Vars
+- AZURE_AI_AGENT_MODEL_NAME
+- AZURE_AI_AGENT_MODEL_FORMAT
+- AZURE_AI_PROJECT_NAME / LOCATION
+- USE_AZURE_AI_SEARCH_SERVICE (true/false)
 
-#### Available Personalities
+### Development Notes
+- Update knowledge files in `src/files/` BEFORE (re)creating an agent.
+- Changing files after creation requires deleting & recreating the agent resource.
+- For evaluation/red teaming, ensure the `azure-ai-evaluation[redteam]` dependency is installed (already in requirements).
 
-| Personality | Description | Temperature | Best For |
-|-------------|-------------|-------------|----------|
-| **General Assistant** (default) | General purpose assistant for all types of queries | 0.7 | Balanced, versatile interactions |
-| **Customer Service** | Friendly, empathetic, and professional customer support | 0.5 | Customer support, issue resolution |
-| **Technical Support** | Knowledgeable, precise, methodical troubleshooting expert | 0.3 | Technical documentation, debugging |
-| **Sales Assistant** | Enthusiastic, persuasive, and product-focused | 0.6 | Product recommendations, sales |
-| **Concierge** | Sophisticated, courteous, personalized service | 0.7 | Hospitality, premium services |
-
-#### Configuration
-
-##### Setting Personality via Environment Variable
-
-Configure the agent personality by setting the `AZURE_AI_AGENT_PERSONALITY` environment variable:
-
+### Testing
 ```bash
-# Set personality during deployment
-azd env set AZURE_AI_AGENT_PERSONALITY customer_service
-azd up
+pytest -q
 ```
+Some tests require Azure resources / credentials; set appropriate connection strings or mark them skipped internally if unavailable.
 
-##### Frontend Personality Selection
+### Deployment
+Use `azd deploy` after changes to push container image and update resources. For full reprovisioning or teardown: `azd down` (destroys resources).
 
-Users can also select personalities through the web interface:
+### Security / Compliance (Internal)
+- Secrets are expected to be managed via Azure Developer CLI environment or managed identity.
+- Do NOT add plaintext credentials to the repo.
+- Review access controls on the private repo periodically.
 
-1. Open the application in your browser
-2. Click the **Settings** button (⚙️) in the top-right corner
-3. Choose your preferred personality from the **Agent Personality** section
-4. The selection persists in your browser for future sessions
+### Directory Pointers
+| Path | Purpose |
+|------|---------|
+| `src/api` | FastAPI app + agent integration |
+| `src/files` | Knowledge ingestion files (must exist before agent creation) |
+| `evals/` | Evaluation scripts & config |
+| `airedteaming/` | Automated red teaming script(s) |
+| `infra/` | Bicep templates for Azure provisioning |
+| `docs/` | Internal technical docs (retain only non-public sensitive info) |
 
-See [Agent Personalities](./docs/agent_personalities.md) for more details on creating custom personalities.
+### Internal Maintenance
+- Keep dependencies patched (focus on azure-* libs, fastapi, uvicorn).
+- Run evaluation & red team scripts before major merges.
+- Remove any reintroduced notebooks unless intentionally required (policy: notebooks allowed now but discouraged in main branch).
 
-## Resource Clean-up
+### Disclaimer (Internal Use Only)
+This code is provided for internal experimentation. Not hardened for external distribution or production without additional security review, monitoring, cost controls, and compliance validation.
 
-To prevent incurring unnecessary charges, it's important to clean up your Azure resources after completing your work with the application.
-
-- **When to Clean Up:**
-  - After you have finished testing or demonstrating the application.
-  - If the application is no longer needed or you have transitioned to a different project or environment.
-  - When you have completed development and are ready to decommission the application.
-
-- **Deleting Resources:**
-  To delete all associated resources and shut down the application, execute the following command:
-
-    ```bash
-    azd down
-    ```
-
-    Please note that this process may take up to 20 minutes to complete.
-
-⚠️ Alternatively, you can delete the resource group directly from the Azure Portal to clean up resources.
-
-## Guidance
-
-### Costs
-
-Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage.
-The majority of the Azure resources used in this infrastructure are on usage-based pricing tiers.
-
-You can try the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator) for the resources:
-
-- **Azure AI Foundry**: Free tier. [Pricing](https://azure.microsoft.com/pricing/details/ai-studio/)
-- **Azure Storage Account**: Standard tier, LRS. Pricing is based on storage and operations. [Pricing](https://azure.microsoft.com/pricing/details/storage/blobs/)
-- **Azure AI Services**: S0 tier, defaults to gpt-4o-mini. Pricing is based on token count. [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/)
-- **Azure Container App**: Consumption tier with 0.5 CPU, 1GiB memory/storage. Pricing is based on resource allocation, and each month allows for a certain amount of free usage. [Pricing](https://azure.microsoft.com/pricing/details/container-apps/)
-- **Log analytics**: Pay-as-you-go tier. Costs based on data ingested. [Pricing](https://azure.microsoft.com/pricing/details/monitor/)
-- **Agent Evaluations**: Incurs the cost of your provided model deployment used for local evaluations.
-- **AI Red Teaming Agent**: Leverages Azure AI Risk and Safety Evaluations to assess attack success from the automated AI red teaming scan. Users are billed based on the consumption of Risk and Safety Evaluations as listed in [our Azure pricing page](https://azure.microsoft.com/pricing/details/ai-foundry/). Click on the tab labeled “Complete AI Toolchain” to view the pricing details.
-
-⚠️ To avoid unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
-
-### Security guidelines
-
-This template also uses [Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview) for local development and deployment.
-
-To ensure continued best practices in your own repository, we recommend that anyone creating solutions based on our templates ensure that the [Github secret scanning](https://docs.github.com/code-security/secret-scanning/about-secret-scanning) setting is enabled.
-
-You may want to consider additional security measures, such as:
-
-- Enabling Microsoft Defender for Cloud to [secure your Azure resources](https://learn.microsoft.com/azure/defender-for-cloud/).
-- Protecting the Azure Container Apps instance with a [firewall](https://learn.microsoft.com/azure/container-apps/waf-app-gateway) and/or [Virtual Network](https://learn.microsoft.com/azure/container-apps/networking?tabs=workload-profiles-env%2Cazure-cli).
-
-> **Important Security Notice** <br/>
-This template, the application code and configuration it contains, has been built to showcase Microsoft Azure specific services and tools. We strongly advise our customers not to make this code part of their production environments without implementing or enabling additional security features.  <br/><br/>
-For a more comprehensive list of best practices and security recommendations for Intelligent Applications, [visit our official documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/).
-
-### Resources
-
-This template creates everything you need to get started with Azure AI Foundry:
-
-| Resource | Description |
-|----------|-------------|
-| [Azure AI Project](https://learn.microsoft.com/azure/ai-studio/how-to/create-projects) | Provides a collaborative workspace for AI development with access to models, data, and compute resources |
-| [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/) | Powers the AI agents for conversational AI and intelligent search capabilities. Default models deployed are gpt-4o-mini, but any Azure AI models can be specified per the [documentation](docs/deploy_customization.md#customizing-model-deployments) |
-| [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/) | Hosts and scales the web application with serverless containers |
-| [Azure Container Registry](https://learn.microsoft.com/azure/container-registry/) | Stores and manages container images for secure deployment |
-| [Storage Account](https://learn.microsoft.com/azure/storage/blobs/) | Provides blob storage for application data and file uploads |
-| [AI Search Service](https://learn.microsoft.com/azure/search/) | *Optional* - Enables hybrid search capabilities combining semantic and vector search |
-| [Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) | *Optional* - Provides application performance monitoring, logging, and telemetry for debugging and optimization |
-| [Log Analytics Workspace](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview) | *Optional* - Collects and analyzes telemetry data for monitoring and troubleshooting |
-
-## Troubleshooting
-
-For solutions to common deployment, container app, and agent issues, see the [Troubleshooting Guide](./docs/troubleshooting.md).
-
-
-## Disclaimers
-
-To the extent that the Software includes components or code used in or derived from Microsoft products or services, including without limitation Microsoft Azure Services (collectively, “Microsoft Products and Services”), you must also comply with the Product Terms applicable to such Microsoft Products and Services. You acknowledge and agree that the license governing the Software does not grant you a license or other right to use Microsoft Products and Services. Nothing in the license or this ReadMe file will serve to supersede, amend, terminate or modify any terms in the Product Terms for any Microsoft Products and Services.
-
-You must also comply with all domestic and international export laws and regulations that apply to the Software, which include restrictions on destinations, end users, and end use. For further information on export restrictions, visit <https://aka.ms/exporting>.
-
-You acknowledge that the Software and Microsoft Products and Services (1) are not designed, intended or made available as a medical device(s), and (2) are not designed or intended to be a substitute for professional medical advice, diagnosis, treatment, or judgment and should not be used to replace or as a substitute for professional medical advice, diagnosis, treatment, or judgment. Customer is solely responsible for displaying and/or obtaining appropriate consents, warnings, disclaimers, and acknowledgements to end users of Customer’s implementation of the Online Services.
-
-You acknowledge the Software is not subject to SOC 1 and SOC 2 compliance audits. No Microsoft technology, nor any of its component technologies, including the Software, is intended or made available as a substitute for the professional advice, opinion, or judgement of a certified financial services professional. Do not use the Software to replace, substitute, or provide professional financial advice or judgment.
-
-BY ACCESSING OR USING THE SOFTWARE, YOU ACKNOWLEDGE THAT THE SOFTWARE IS NOT DESIGNED OR INTENDED TO SUPPORT ANY USE IN WHICH A SERVICE INTERRUPTION, DEFECT, ERROR, OR OTHER FAILURE OF THE SOFTWARE COULD RESULT IN THE DEATH OR SERIOUS BODILY INJURY OF ANY PERSON OR IN PHYSICAL OR ENVIRONMENTAL DAMAGE (COLLECTIVELY, “HIGH-RISK USE”), AND THAT YOU WILL ENSURE THAT, IN THE EVENT OF ANY INTERRUPTION, DEFECT, ERROR, OR OTHER FAILURE OF THE SOFTWARE, THE SAFETY OF PEOPLE, PROPERTY, AND THE ENVIRONMENT ARE NOT REDUCED BELOW A LEVEL THAT IS REASONABLY, APPROPRIATE, AND LEGAL, WHETHER IN GENERAL OR IN A SPECIFIC INDUSTRY. BY ACCESSING THE SOFTWARE, YOU FURTHER ACKNOWLEDGE THAT YOUR HIGH-RISK USE OF THE SOFTWARE IS AT YOUR OWN RISK.
+---
+Minimal public artifacts have been removed as requested.

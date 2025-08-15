@@ -1,17 +1,11 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 # See LICENSE file in the project root for full license information.
-from typing import Dict, List
 
 import asyncio
-import csv
-import json
-import logging
 import multiprocessing
 import os
-import sys
 
-from azure.ai.projects.aio import AIProjectClient
 from azure.ai.agents.models import (
     Agent,
     AsyncToolSet,
@@ -20,10 +14,10 @@ from azure.ai.agents.models import (
     FileSearchTool,
     Tool,
 )
-from azure.ai.projects.models import ConnectionType, ApiKeyCredentials
-from azure.identity.aio import DefaultAzureCredential
+from azure.ai.projects.aio import AIProjectClient
+from azure.ai.projects.models import ApiKeyCredentials, ConnectionType
 from azure.core.credentials_async import AsyncTokenCredential
-
+from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
 
 from logging_config import configure_logging
@@ -32,6 +26,69 @@ load_dotenv()
 
 logger = configure_logging(os.getenv("APP_LOG_FILE", ""))
 
+# Predefined agent personalities with different behaviors and parameters
+AGENT_PERSONALITIES = {
+    "customer_service": {
+        "name": "Customer Service Agent",
+        "search_instructions": "Use {tool_type} always to provide accurate, helpful information. "
+                              "Avoid using base knowledge.",
+        "general_instructions": """You are a friendly and empathetic customer service representative. Your goal is to:
+- Help customers resolve their issues quickly and effectively
+- Show empathy and understanding for customer concerns
+- Provide clear, step-by-step solutions when possible
+- Escalate complex issues appropriately
+- Maintain a positive, patient tone even with frustrated customers
+- Always prioritize customer satisfaction while following company policies""",
+        "temperature": 0.7,
+        "top_p": 0.9
+    },
+    "technical_support": {
+        "name": "Technical Support Agent", 
+        "search_instructions": "Use {tool_type} always to provide precise technical information. "
+                              "Avoid using base knowledge.",
+        "general_instructions": """You are a knowledgeable technical support specialist. Your approach should be:
+- Provide detailed, accurate technical information
+- Break down complex problems into logical troubleshooting steps
+- Ask clarifying questions to better understand technical issues
+- Suggest multiple solution approaches when applicable
+- Include relevant technical specifications and requirements
+- Document solutions clearly for future reference
+- Focus on root cause analysis and prevention""",
+        "temperature": 0.3,
+        "top_p": 0.8
+    },
+    "sales_assistant": {
+        "name": "Sales Assistant Agent",
+        "search_instructions": "Use {tool_type} always to highlight product benefits and features. "
+                              "Avoid using base knowledge.",
+        "general_instructions": """You are an enthusiastic and knowledgeable sales assistant. Your role is to:
+- Understand customer needs and recommend appropriate solutions
+- Highlight key benefits and value propositions of products/services
+- Create compelling, persuasive presentations of offerings
+- Address objections with confidence and expertise
+- Build rapport and trust with potential customers
+- Guide customers through the sales process smoothly
+- Focus on how products/services solve customer problems""",
+        "temperature": 0.8,
+        "top_p": 0.9
+    },
+    "general_assistant": {
+        "name": "General Assistant Agent",
+        "search_instructions": "Use {tool_type} always to provide comprehensive assistance. "
+                              "Avoid using base knowledge.",
+        "general_instructions": """You are a professional and versatile assistant. Your approach should be:
+- Provide balanced, well-rounded assistance across various topics
+- Adapt your communication style to match the user's needs
+- Offer clear, concise, and actionable information
+- Ask follow-up questions when clarification is needed
+- Maintain professionalism while being approachable
+- Provide structured responses that are easy to understand
+- Stay focused on helping users achieve their goals efficiently""",
+        "temperature": 0.5,
+        "top_p": 0.85
+    }
+}
+
 
 agentID = os.environ.get("AZURE_EXISTING_AGENT_ID") if os.environ.get(
     "AZURE_EXISTING_AGENT_ID") else os.environ.get(
@@ -39,7 +96,26 @@ agentID = os.environ.get("AZURE_EXISTING_AGENT_ID") if os.environ.get(
     
 proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT")
 
-def list_files_in_files_directory() -> List[str]:    
+
+def get_personality_config(personality_name: str = None) -> dict:
+    """
+    Get personality configuration based on environment variable or default.
+    
+    :param personality_name: Override personality name (optional)
+    :return: Dictionary containing personality configuration
+    """
+    if personality_name is None:
+        personality_name = os.environ.get("AZURE_AI_AGENT_PERSONALITY", "general_assistant")
+    
+    # Ensure backward compatibility by defaulting to general_assistant
+    if personality_name not in AGENT_PERSONALITIES:
+        logger.warning(f"Unknown personality '{personality_name}', falling back to 'general_assistant'")
+        personality_name = "general_assistant"
+    
+    return AGENT_PERSONALITIES[personality_name]
+
+
+def list_files_in_files_directory() -> list[str]:    
     # Get the absolute path of the 'files' directory
     files_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'files'))
     
@@ -71,8 +147,8 @@ async def create_index_maybe(
         try:
             aoai_connection = await ai_client.connections.get_default(
                 connection_type=ConnectionType.AZURE_OPEN_AI, include_credentials=True)
-        except ValueError as e:
-            logger.error("Error creating index: {e}")
+        except ValueError:
+            logger.error("Error creating index")
             return
         
         embed_api_key = None
@@ -125,7 +201,7 @@ async def get_available_tool(
     :return: The tool set, available based on the environment.
     """
     # File name -> {"id": file_id, "path": file_path}
-    file_ids: List[str] = []
+    file_ids: list[str] = []
     # First try to get an index search.
     conn_id = ""
     if os.environ.get('AZURE_AI_SEARCH_INDEX_NAME'):
@@ -135,7 +211,6 @@ async def get_available_tool(
                 conn_id = conn.id
                 break
 
-    toolset = AsyncToolSet()
     if conn_id:
         await create_index_maybe(project_client, creds)
 
@@ -171,14 +246,29 @@ async def create_agent(ai_client: AIProjectClient,
     toolset = AsyncToolSet()
     toolset.add(tool)
     
-    instructions = "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else "Use File Search always.  Avoid to use base knowledge."
+    # Get personality configuration
+    personality_config = get_personality_config()
     
+    # Determine tool type for instructions
+    tool_type = "AI Search" if isinstance(tool, AzureAISearchTool) else "File Search"
+    
+    # Format search instructions with tool type
+    search_instructions = personality_config["search_instructions"].format(tool_type=tool_type)
+    
+    # Combine search instructions with general personality instructions
+    full_instructions = f"{search_instructions}\n\n{personality_config['general_instructions']}"
+    
+    # Create agent with personality-specific parameters
     agent = await ai_client.agents.create_agent(
         model=os.environ["AZURE_AI_AGENT_DEPLOYMENT_NAME"],
         name=os.environ["AZURE_AI_AGENT_NAME"],
-        instructions=instructions,
-        toolset=toolset
+        instructions=full_instructions,
+        toolset=toolset,
+        temperature=personality_config.get("temperature", 0.5),
+        top_p=personality_config.get("top_p", 0.85)
     )
+    
+    logger.info(f"Created agent with personality: {personality_config['name']}")
     return agent
 
 

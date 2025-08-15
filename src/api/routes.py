@@ -281,6 +281,37 @@ async def get_chat_agent(
 ):
     return JSONResponse(content=get_agent(request).as_dict())  
 
+@router.get("/personalities")
+async def get_available_personalities():
+    """Get list of available agent personalities"""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("gunicorn_conf", "gunicorn.conf.py")
+    gunicorn_conf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gunicorn_conf)
+    
+    AGENT_PERSONALITIES = gunicorn_conf.AGENT_PERSONALITIES
+    
+    current_personality = os.environ.get("AZURE_AI_AGENT_PERSONALITY", "general_assistant")
+    
+    personalities = []
+    for key, config in AGENT_PERSONALITIES.items():
+        description = config["general_instructions"]
+        if len(description) > 200:
+            description = description[:200] + "..."
+            
+        personalities.append({
+            "id": key,
+            "name": config["name"],
+            "description": description,
+            "temperature": config["temperature"],
+            "current": key == current_personality
+        })
+    
+    return JSONResponse(content={
+        "personalities": personalities,
+        "current": current_personality
+    })
+
 @router.post("/chat")
 async def chat(
     request: Request,

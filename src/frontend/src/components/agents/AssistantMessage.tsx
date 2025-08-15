@@ -26,11 +26,30 @@ export function AssistantMessage({
 }: IAssistantMessageProps): React.JSX.Element {
   const hasAnnotations = message.annotations && message.annotations.length > 0;
   const references = hasAnnotations
-    ? message.annotations?.map((annotation, index) => (
-        <div key={index} className="reference-item">
-          {annotation.text || annotation.file_name}
-        </div>
-      ))
+    ? message.annotations?.map((annotation, index) => {
+        // Extract additional metadata if available
+        const hasExtendedInfo = annotation.file_citation && 
+                               annotation.file_citation.file && 
+                               annotation.file_citation.file.metadata;
+        
+        // Format the citation with enhanced metadata when available
+        let citationText = annotation.text || annotation.file_name;
+        if (hasExtendedInfo) {
+          const metadata = annotation.file_citation.file.metadata;
+          const title = metadata.title || annotation.file_name;
+          const section = metadata.section || '';
+          const brand = metadata.brand ? `Brand: ${metadata.brand}` : '';
+          const id = metadata.document_id ? `ID: ${metadata.document_id}` : '';
+          
+          citationText = `${title}${section ? `, Section: ${section}` : ''}${brand ? `, ${brand}` : ''}${id ? `, ${id}` : ''}`;
+        }
+        
+        return (
+          <div key={index} className="reference-item">
+            {citationText}
+          </div>
+        );
+      })
     : [];
 
   return (

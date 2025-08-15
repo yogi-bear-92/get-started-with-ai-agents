@@ -27,6 +27,8 @@ from azure.core.credentials_async import AsyncTokenCredential
 from dotenv import load_dotenv
 
 from logging_config import configure_logging
+from api.file_parser import FileParser
+from api.enhanced_file_search import EnhancedFileSearch
 
 load_dotenv()
 
@@ -149,21 +151,40 @@ async def get_available_tool(
     else:
         logger.info(
             "agent: index was not initialized, falling back to file search.")
+            
+        # Initialize enhanced file search
+        enhanced_search = EnhancedFileSearch()
+        logger.info(f"Scanning files directory for {len(FILES_NAMES)} files with enhanced search")
+        
+        # Scan and categorize files
+        file_metadata = enhanced_search.scan_files()
+        categories = enhanced_search.categorize_files()
+        logger.info(f"Found {len(categories)} categories: {', '.join(categories.keys())}")
 
-        # Upload files for file search
+        # Upload files for file search with enhanced metadata
         for file_name in FILES_NAMES:
             file_path = _get_file_path(file_name)
+            
+            # Use enhanced file parser to extract metadata
+            try:
+                content, metadata = FileParser.parse_file(file_path)
+                logger.info(f"Processed file {file_name} with metadata: {metadata}")
+            except Exception as e:
+                logger.warning(f"Error processing file {file_name}: {str(e)}")
+            
+            # Upload file to agent
             file = await project_client.agents.files.upload_and_poll(
                 file_path=file_path, purpose=FilePurpose.AGENTS)
-            # Store both file id and the file path using the file name as key.
+            
+            # Store file ID
             file_ids.append(file.id)
 
         # Create the vector store using the file IDs.
         vector_store = await project_client.agents.vector_stores.create_and_poll(
             file_ids=file_ids,
-            name="sample_store"
+            name="enhanced_file_store"
         )
-        logger.info("agent: file store and vector store success")
+        logger.info("agent: enhanced file store and vector store created successfully")
 
         return FileSearchTool(vector_store_ids=[vector_store.id])
 
@@ -178,30 +199,49 @@ async def create_agent(ai_client: AIProjectClient,
     # Define predefined agent personalities
     agent_personalities = {
         "default": {
-            "instructions": "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else "Use File Search always. Avoid to use base knowledge.",
+            "instructions": "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else 
+                "Use File Search always. Avoid to use base knowledge. Always include proper citations for information found in files. " +
+                "For each piece of information retrieved from a file, add a citation in the format [Source: Filename, Section X]. " +
+                "Organize your responses to clearly distinguish between information from different sources.",
             "temperature": 0.7,
         },
         "customer_service": {
             "instructions": "You are a helpful customer service assistant. Always be polite, patient, and professional. " +
-            ("Use AI Search to find accurate information about our products and services. " if isinstance(tool, AzureAISearchTool) else "Use File Search to find accurate information about our products and services. ") +
+            ("Use AI Search to find accurate information about our products and services. " if isinstance(tool, AzureAISearchTool) else 
+                "Use File Search to find accurate information about our products and services. " +
+                "Always provide citations for specific product information using [Source: Product Name, Brand, ID]. " +
+                "When discussing customer information, be sure to reference the source document. " +
+                "If information is available from multiple sources, prefer the most recent or most detailed source.") +
             "If you don't know the answer, admit it and offer to connect the customer with a human representative.",
             "temperature": 0.5,
         },
         "technical_support": {
             "instructions": "You are a technical support specialist. Provide clear, concise, and accurate technical information. " +
-            ("Use AI Search to find specific technical details. " if isinstance(tool, AzureAISearchTool) else "Use File Search to find specific technical details. ") +
+            ("Use AI Search to find specific technical details. " if isinstance(tool, AzureAISearchTool) else 
+                "Use File Search to find specific technical details. " +
+                "Always cite your sources when providing technical information, using the format [Source: Document Name, Section X]. " +
+                "Be precise with citations, including exact section or page numbers when available. " +
+                "When providing step-by-step instructions, ensure each step is accurate based on the documentation.") +
             "Use technical language when appropriate but be able to explain concepts in simpler terms when needed.",
             "temperature": 0.3,
         },
         "sales_assistant": {
             "instructions": "You are a sales assistant focused on helping customers find the right products. " +
-            ("Use AI Search to provide product information and make appropriate recommendations. " if isinstance(tool, AzureAISearchTool) else "Use File Search to provide product information and make appropriate recommendations. ") +
+            ("Use AI Search to provide product information and make appropriate recommendations. " if isinstance(tool, AzureAISearchTool) else 
+                "Use File Search to provide product information and make appropriate recommendations. " +
+                "Always cite product features and specifications with their source documents. " +
+                "When comparing products, clearly indicate the source of each comparison point. " +
+                "Format citations as [Product Name, Brand, Category] to help customers easily identify product information sources.") +
             "Highlight product benefits and features that match customer needs without being pushy.",
             "temperature": 0.6,
         },
         "concierge": {
             "instructions": "You are a sophisticated and courteous concierge assistant. " +
-            ("Use AI Search to provide personalized recommendations and assistance. " if isinstance(tool, AzureAISearchTool) else "Use File Search to provide personalized recommendations and assistance. ") +
+            ("Use AI Search to provide personalized recommendations and assistance. " if isinstance(tool, AzureAISearchTool) else 
+                "Use File Search to provide personalized recommendations and assistance. " +
+                "When providing information from files, elegantly incorporate citations without disrupting the refined tone. " +
+                "Use discreet citation formats such as 'According to [Source]' or footnote-style references at the end of your responses. " +
+                "Ensure all recommendations are based on accurate information from the knowledge base.") +
             "Maintain a refined, professional tone while being warm and accommodating. Focus on providing exceptional service and attention to detail.",
             "temperature": 0.7,
         }

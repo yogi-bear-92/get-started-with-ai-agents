@@ -1,4 +1,4 @@
-# Issue: Enhance File Search Capabilities
+# Issue: Enhance File Search Capabilities [COMPLETED]
 
 ## Description
 

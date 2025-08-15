@@ -95,6 +95,32 @@ Once you have the agents and the web app working, you are encouraged to try one 
 
 - **[Agent Personalities](./docs/agent_personalities.md)** - Configure your agent's personality and behavior to suit different use cases such as customer service, technical support, sales assistance, or concierge services.
 
+### Enhanced File Search
+
+This solution includes advanced file search capabilities with improved citation handling and support for multiple file formats:
+
+- **Multiple File Format Support**: Search across JSON, Markdown, Text, PDF, and Word documents
+- **Enhanced Citation System**: Clear references to source documents including file name, section, and metadata
+- **File Categorization**: Automatic categorization of files based on content and metadata
+- **Relevance Scoring**: Intelligent ranking of search results based on query relevance
+- **Semantic Chunking**: Better context extraction with semantic understanding of document structure
+
+#### Supported File Formats
+
+| Format | File Extension | Notes |
+|--------|---------------|-------|
+| JSON   | .json         | Structured data with metadata extraction |
+| Markdown | .md         | Text-based format with headers and sections |
+| Text   | .txt          | Plain text files |
+| PDF    | .pdf          | Requires PyPDF2 library |
+| Word   | .docx, .doc   | Requires python-docx library |
+
+To add the required dependencies for PDF and Word document support:
+
+```bash
+pip install -r src/requirements-enhanced.txt
+```
+
 ### Agent Personalities
 
 This solution supports multiple predefined agent personalities that you can configure to customize your agent's behavior and communication style. Each personality comes with tailored instructions and temperature settings optimized for specific use cases.

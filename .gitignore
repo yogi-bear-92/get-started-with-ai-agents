@@ -1,13 +1,7 @@
 # Ignore Jupyter notebooks (project standard: notebooks removed)
 *.ipynb
 
-# Prevent duplicate root status and test files (they live under docs/project-status and tests/)
-/MEMORY_IMPLEMENTATION_STATUS.md
-/SESSION_COMPLETE_SUMMARY.md
-/memory_test_results.md
-/test_memory.py
-/test_memory_integration.py
-/test_vector_memory.py
+# (Removed per request) Do not ignore individual status/test files; ensure they are actually deleted instead.
 
 __pycache__/
 

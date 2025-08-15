@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 import logging
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-from .memory_manager import MemoryManager
+from .vector_memory_manager import VectorMemoryManager
 
 from azure.ai.agents.aio import AgentsClient
 from azure.ai.agents.models import (
@@ -50,8 +50,8 @@ router = APIRouter()
 directory = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=directory)
 
-# Initialize memory manager
-memory_manager = MemoryManager()
+# Initialize enhanced vector memory manager
+memory_manager = VectorMemoryManager()
 
 # Create a new FastAPI router
 router = fastapi.APIRouter()
@@ -77,8 +77,10 @@ def authenticate(credentials: Optional[HTTPBasicCredentials] = Depends(security)
             headers={"WWW-Authenticate": "Basic"},
         )
 
-    correct_username = secrets.compare_digest(credentials.username, username or "")
-    correct_password = secrets.compare_digest(credentials.password, password or "")
+    correct_username = secrets.compare_digest(
+        credentials.username, username or "")
+    correct_password = secrets.compare_digest(
+        credentials.password, password or "")
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -112,7 +114,7 @@ def get_app_insights_connection_string(request: Request) -> Optional[str]:
 
 # Enhanced event handler that integrates with memory management
 class MyEventHandler(AsyncAgentEventHandler):
-    def __init__(self, ai_project: AIProjectClient, app_insights_conn_str: Optional[str], 
+    def __init__(self, ai_project: AIProjectClient, app_insights_conn_str: Optional[str],
                  user_id: str, user_query: str):
         super().__init__()
         self._ai_project = ai_project
@@ -144,7 +146,8 @@ class MyEventHandler(AsyncAgentEventHandler):
                     query=self.user_query,
                     response=self.agent_response
                 )
-                logger.info(f"Stored conversation memory for user {self.user_id}")
+                logger.info(
+                    f"Stored conversation memory for user {self.user_id}")
         except Exception as e:
             logger.error(f"Failed to store conversation memory: {e}")
 
@@ -160,7 +163,7 @@ async def get_message_and_annotations(agent_client: AgentsClient, message: Threa
             for content_part in message.content:
                 if hasattr(content_part, 'text'):
                     message_content += content_part.text.value
-                    
+
                     if hasattr(content_part.text, 'annotations'):
                         for annotation in content_part.text.annotations:
                             if hasattr(annotation, 'file_citation'):
@@ -212,13 +215,15 @@ async def chat(
         app_insight_conn_str = get_app_insights_connection_string(request)
 
         if not user_query.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
+            raise HTTPException(
+                status_code=400, detail="Query cannot be empty")
 
         logger.info(f"Chat request from user {user_id}: {user_query}")
 
         # Get memory context for the user
-        memory_context = memory_manager.format_context_for_agent(user_id, user_query)
-        
+        memory_context = memory_manager.format_context_for_agent(
+            user_id, user_query)
+
         # Enhance the user query with memory context
         enhanced_content = f"{memory_context}\n\nUser Query: {user_query}" if memory_context else user_query
 
@@ -275,16 +280,16 @@ async def get_messages(
     """Get messages from a thread"""
     try:
         agent_client = get_agent_client(request)
-        
+
         response = agent_client.messages.list(thread_id=thread_id)
         messages = []
-        
+
         for message in response:
             formatted_message = await get_message_and_annotations(agent_client, message)
             messages.append(formatted_message)
-        
+
         return JSONResponse(content={"messages": messages})
-    
+
     except Exception as e:
         logger.error(f"Error getting messages: {str(e)}")
         return JSONResponse(
@@ -299,7 +304,7 @@ async def get_agents(request: Request, _auth=auth_dependency):
     try:
         agent_client = get_agent_client(request)
         agents = agent_client.agents.list()
-        
+
         agent_list = []
         for agent in agents:
             agent_list.append({
@@ -309,9 +314,9 @@ async def get_agents(request: Request, _auth=auth_dependency):
                 "model": agent.model,
                 "instructions": agent.instructions
             })
-        
+
         return JSONResponse(content={"agents": agent_list})
-    
+
     except Exception as e:
         logger.error(f"Error getting agents: {str(e)}")
         return JSONResponse(
@@ -326,13 +331,14 @@ async def get_user_memory(user_id: str, _auth=auth_dependency):
     """Get user memory profile and recent conversations"""
     try:
         profile = memory_manager.get_user_profile(user_id)
-        recent_memories = memory_manager.get_relevant_memories(user_id, "", max_results=10)
-        
+        recent_memories = memory_manager.get_relevant_memories(
+            user_id, "", max_results=10)
+
         return JSONResponse(content={
             "profile": profile,
             "recent_memories": recent_memories
         })
-    
+
     except Exception as e:
         logger.error(f"Error getting user memory: {str(e)}")
         return JSONResponse(
@@ -348,12 +354,66 @@ async def clear_user_memory(user_id: str, _auth=auth_dependency):
         # Note: This would need to be implemented in the memory manager
         logger.info(f"Memory clear requested for user {user_id}")
         return JSONResponse(content={"status": "success", "message": "Memory cleared"})
-    
+
     except Exception as e:
         logger.error(f"Error clearing memory: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Failed to clear memory: {str(e)}"}
+        )
+
+
+@router.get("/api/memory/analytics/{user_id}")
+async def get_memory_analytics(user_id: str, _auth=auth_dependency):
+    """Get advanced memory analytics for a user"""
+    try:
+        analytics = memory_manager.get_memory_analytics(user_id)
+        
+        return JSONResponse(content={
+            "analytics": analytics,
+            "user_id": user_id
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting memory analytics: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to get memory analytics: {str(e)}"}
+        )
+
+
+@router.post("/api/memory/search/{user_id}")
+async def search_user_memories(
+    user_id: str, 
+    request: Request,
+    _auth=auth_dependency
+):
+    """Search user memories with vector similarity"""
+    try:
+        body = await request.json()
+        query = body.get("query", "")
+        max_results = body.get("max_results", 5)
+        
+        if not query.strip():
+            raise HTTPException(status_code=400, detail="Query cannot be empty")
+        
+        memories = memory_manager.get_relevant_memories(
+            user_id=user_id,
+            query=query,
+            max_results=max_results
+        )
+        
+        return JSONResponse(content={
+            "query": query,
+            "results": memories,
+            "total_found": len(memories)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error searching memories: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to search memories: {str(e)}"}
         )
 
 

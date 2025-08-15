@@ -1,0 +1,23 @@
+[
+  {
+    "timestamp": "2025-08-15T14:51:46.694210",
+    "thread_id": "test_thread_2",
+    "query": "Can you tell me about the agent's capabilities?",
+    "response": "The agent can process documents, remember conversations, and provide personalized assistance.",
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-08-15T14:51:46.693838",
+    "thread_id": "test_thread_1",
+    "query": "How does the memory system work?",
+    "response": "The memory system stores conversation history and user preferences to provide contextual responses.",
+    "metadata": {}
+  },
+  {
+    "timestamp": "2025-08-15T14:51:46.693316",
+    "thread_id": "test_thread_0",
+    "query": "What are the main features of the AI agent?",
+    "response": "The AI agent has memory management, file search capabilities, and contextual responses.",
+    "metadata": {}
+  }
+]

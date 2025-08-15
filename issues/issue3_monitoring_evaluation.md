@@ -1,4 +1,4 @@
-# Issue: Improved Monitoring and Evaluation Framework
+# Issue: Improved Monitoring and Evaluation Framework [COMPLETED]
 
 ## Description
 

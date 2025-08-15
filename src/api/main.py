@@ -18,6 +18,7 @@ from logging_config import configure_logging
 enable_trace = False
 logger = None
 
+
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
     agent = None
@@ -26,9 +27,11 @@ async def lifespan(app: fastapi.FastAPI):
     agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID")
     try:
         ai_project = AIProjectClient(
-            credential=DefaultAzureCredential(exclude_shared_token_cache_credential=True),
+            credential=DefaultAzureCredential(
+                exclude_shared_token_cache_credential=True),
             endpoint=proj_endpoint,
-            api_version = "2025-05-15-preview" # Evaluations yet not supported on stable (api_version="2025-05-01")
+            # Evaluations yet not supported on stable (api_version="2025-05-01")
+            api_version="2025-05-15-preview"
         )
         logger.info("Created AIProjectClient")
 
@@ -38,19 +41,23 @@ async def lifespan(app: fastapi.FastAPI):
                 application_insights_connection_string = await ai_project.telemetry.get_connection_string()
             except Exception as e:
                 e_string = str(e)
-                logger.error("Failed to get Application Insights connection string, error: %s", e_string)
+                logger.error(
+                    "Failed to get Application Insights connection string, error: %s", e_string)
             if not application_insights_connection_string:
-                logger.error("Application Insights was not enabled for this project.")
-                logger.error("Enable it via the 'Tracing' tab in your AI Foundry project page.")
+                logger.error(
+                    "Application Insights was not enabled for this project.")
+                logger.error(
+                    "Enable it via the 'Tracing' tab in your AI Foundry project page.")
                 exit()
             else:
                 from azure.monitor.opentelemetry import configure_azure_monitor
-                configure_azure_monitor(connection_string=application_insights_connection_string)
+                configure_azure_monitor(
+                    connection_string=application_insights_connection_string)
                 app.state.application_insights_connection_string = application_insights_connection_string
                 logger.info("Configured Application Insights for tracing.")
 
         if agent_id:
-            try: 
+            try:
                 agent = await ai_project.agents.get_agent(agent_id)
                 logger.info("Agent already exists, skipping creation")
                 logger.info(f"Fetched agent, agent ID: {agent.id}")
@@ -66,15 +73,17 @@ async def lifespan(app: fastapi.FastAPI):
                 async for agent_object in agent_list:
                     if agent_object.name == agent_name:
                         agent = agent_object
-                        logger.info(f"Found agent by name '{agent_name}', ID={agent_object.id}")
+                        logger.info(
+                            f"Found agent by name '{agent_name}', ID={agent_object.id}")
                         break
 
         if not agent:
-            raise RuntimeError("No agent found. Ensure qunicorn.py created one or set AZURE_EXISTING_AGENT_ID.")
+            raise RuntimeError(
+                "No agent found. Ensure qunicorn.py created one or set AZURE_EXISTING_AGENT_ID.")
 
         app.state.ai_project = ai_project
         app.state.agent = agent
-        
+
         yield
 
     except Exception as e:
@@ -109,7 +118,8 @@ def create_app():
             from azure.monitor.opentelemetry import configure_azure_monitor
         except ModuleNotFoundError:
             logger.error("Required libraries for tracing not installed.")
-            logger.error("Please make sure azure-monitor-opentelemetry is installed.")
+            logger.error(
+                "Please make sure azure-monitor-opentelemetry is installed.")
             exit()
     else:
         logger.info("Tracing is not enabled")
@@ -117,7 +127,7 @@ def create_app():
     directory = os.path.join(os.path.dirname(__file__), "static")
     app = fastapi.FastAPI(lifespan=lifespan)
     app.mount("/static", StaticFiles(directory=directory), name="static")
-    
+
     # Mount React static files
     # Uncomment the following lines if you have a React frontend
     # react_directory = os.path.join(os.path.dirname(__file__), "static/react")
@@ -125,6 +135,14 @@ def create_app():
 
     from . import routes  # Import routes
     app.include_router(routes.router)
+
+    # Import evaluation routes
+    try:
+        from . import evaluation_routes
+        app.include_router(evaluation_routes.router)
+        logger.info("Evaluation routes added successfully")
+    except Exception as e:
+        logger.error(f"Failed to import evaluation routes: {e}", exc_info=True)
 
     # Global exception handler for any unhandled exceptions
     @app.exception_handler(Exception)
@@ -134,5 +152,5 @@ def create_app():
             status_code=500,
             content={"detail": "Internal server error"}
         )
-    
+
     return app

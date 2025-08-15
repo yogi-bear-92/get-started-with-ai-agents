@@ -27,7 +27,13 @@ The app code runs in Azure Container App to process the user input and generate 
 ### Key Features
 
 - **Knowledge Retrieval**<br/>
-The AI agent uses file search to retrieve knowledge from uploaded files.
+The AI agent uses enhanced file search to retrieve knowledge from uploaded files with improved citation handling and support for multiple file formats.
+
+- **Multiple Agent Personalities**<br/>
+Support for different agent personalities (default, customer service, technical support, sales assistant, concierge) to adapt to various use cases.
+
+- **Comprehensive Evaluation Framework**<br/>
+Advanced monitoring and evaluation capabilities including quality metrics, factual accuracy assessment, and user feedback collection.
 
 - **Customizable Agent Personalities**<br/>
 Multiple predefined agent personalities (customer service, technical support, sales) can be selected to provide specialized behavior for different use cases. [Learn more](./docs/agent_personalities.md).

@@ -6,6 +6,7 @@ import {
   ReferenceOverflowButton,
 } from "@fluentui-copilot/react-reference";
 import { Suspense } from "react";
+import FeedbackForm from "../evaluation/FeedbackForm";
 
 import { Markdown } from "../core/Markdown";
 import { UsageInfo } from "./UsageInfo";
@@ -27,29 +28,29 @@ export function AssistantMessage({
   const hasAnnotations = message.annotations && message.annotations.length > 0;
   const references = hasAnnotations
     ? message.annotations?.map((annotation, index) => {
-        // Extract additional metadata if available
-        const hasExtendedInfo = annotation.file_citation && 
-                               annotation.file_citation.file && 
-                               annotation.file_citation.file.metadata;
-        
-        // Format the citation with enhanced metadata when available
-        let citationText = annotation.text || annotation.file_name;
-        if (hasExtendedInfo) {
-          const metadata = annotation.file_citation.file.metadata;
-          const title = metadata.title || annotation.file_name;
-          const section = metadata.section || '';
-          const brand = metadata.brand ? `Brand: ${metadata.brand}` : '';
-          const id = metadata.document_id ? `ID: ${metadata.document_id}` : '';
-          
-          citationText = `${title}${section ? `, Section: ${section}` : ''}${brand ? `, ${brand}` : ''}${id ? `, ${id}` : ''}`;
-        }
-        
-        return (
-          <div key={index} className="reference-item">
-            {citationText}
-          </div>
-        );
-      })
+      // Extract additional metadata if available
+      const hasExtendedInfo = annotation.file_citation &&
+        annotation.file_citation.file &&
+        annotation.file_citation.file.metadata;
+
+      // Format the citation with enhanced metadata when available
+      let citationText = annotation.text || annotation.file_name;
+      if (hasExtendedInfo) {
+        const metadata = annotation.file_citation.file.metadata;
+        const title = metadata.title || annotation.file_name;
+        const section = metadata.section || '';
+        const brand = metadata.brand ? `Brand: ${metadata.brand}` : '';
+        const id = metadata.document_id ? `ID: ${metadata.document_id}` : '';
+
+        citationText = `${title}${section ? `, Section: ${section}` : ''}${brand ? `, ${brand}` : ''}${id ? `, ${id}` : ''}`;
+      }
+
+      return (
+        <div key={index} className="reference-item">
+          {citationText}
+        </div>
+      );
+    })
     : [];
 
   return (
@@ -97,6 +98,12 @@ export function AssistantMessage({
       }
       loadingState={loadingState}
       name={agentName ?? "Bot"}
+      actions={
+        <FeedbackForm
+          query={message.query || ""}
+          response={message.content}
+        />
+      }
     >
       <Suspense fallback={<Spinner size="small" />}>
         <Markdown content={message.content} />

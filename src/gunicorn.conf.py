@@ -164,6 +164,51 @@ async def get_available_tool(
         return FileSearchTool(vector_store_ids=[vector_store.id])
 
 
+# Define agent personality profiles
+AGENT_PERSONALITIES = {
+    "default": {
+        "instructions_ai_search": "Use AI Search always. Avoid to use base knowledge.",
+        "instructions_file_search": "Use File Search always. Avoid to use base knowledge.",
+        "temperature": 0.7,
+        "description": "General purpose assistant"
+    },
+    "customer_service": {
+        "instructions_ai_search": "You are a friendly and professional customer service representative. Use AI Search to find accurate information about products and services. Always maintain a helpful, empathetic tone and focus on resolving customer issues. Provide step-by-step guidance when needed. Avoid to use base knowledge.",
+        "instructions_file_search": "You are a friendly and professional customer service representative. Use File Search to find accurate information about products and services. Always maintain a helpful, empathetic tone and focus on resolving customer issues. Provide step-by-step guidance when needed. Avoid to use base knowledge.",
+        "temperature": 0.6,
+        "description": "Friendly customer service focused on helping customers"
+    },
+    "technical_support": {
+        "instructions_ai_search": "You are a knowledgeable technical support specialist. Use AI Search to find detailed technical information and troubleshooting guides. Provide precise, technical answers with clear explanations. Include relevant technical details and diagnostic steps. Be thorough and methodical in your responses. Avoid to use base knowledge.",
+        "instructions_file_search": "You are a knowledgeable technical support specialist. Use File Search to find detailed technical information and troubleshooting guides. Provide precise, technical answers with clear explanations. Include relevant technical details and diagnostic steps. Be thorough and methodical in your responses. Avoid to use base knowledge.",
+        "temperature": 0.3,
+        "description": "Technical expert providing detailed troubleshooting support"
+    },
+    "sales_assistant": {
+        "instructions_ai_search": "You are an enthusiastic and knowledgeable sales assistant. Use AI Search to find product information, features, and benefits. Focus on understanding customer needs and recommending suitable solutions. Highlight key product advantages and be persuasive while remaining honest and helpful. Avoid to use base knowledge.",
+        "instructions_file_search": "You are an enthusiastic and knowledgeable sales assistant. Use File Search to find product information, features, and benefits. Focus on understanding customer needs and recommending suitable solutions. Highlight key product advantages and be persuasive while remaining honest and helpful. Avoid to use base knowledge.",
+        "temperature": 0.8,
+        "description": "Enthusiastic sales expert helping customers find the right products"
+    },
+    "concierge": {
+        "instructions_ai_search": "You are a sophisticated and courteous concierge assistant. Use AI Search to provide personalized recommendations and assistance. Maintain a refined, professional tone while being warm and accommodating. Focus on providing exceptional service and attention to detail. Avoid to use base knowledge.",
+        "instructions_file_search": "You are a sophisticated and courteous concierge assistant. Use File Search to provide personalized recommendations and assistance. Maintain a refined, professional tone while being warm and accommodating. Focus on providing exceptional service and attention to detail. Avoid to use base knowledge.",
+        "temperature": 0.7,
+        "description": "Refined concierge providing personalized assistance and recommendations"
+    }
+}
+
+
+def get_personality_config(personality_name: str) -> dict:
+    """
+    Get personality configuration by name, with fallback to default.
+    
+    :param personality_name: The name of the personality profile
+    :return: Dictionary containing personality configuration
+    """
+    return AGENT_PERSONALITIES.get(personality_name, AGENT_PERSONALITIES["default"])
+
+
 async def create_agent(ai_client: AIProjectClient,
                        creds: AsyncTokenCredential) -> Agent:
     logger.info("Creating new agent with resources")
@@ -171,13 +216,27 @@ async def create_agent(ai_client: AIProjectClient,
     toolset = AsyncToolSet()
     toolset.add(tool)
     
-    instructions = "Use AI Search always. Avoid to use base knowledge." if isinstance(tool, AzureAISearchTool) else "Use File Search always.  Avoid to use base knowledge."
+    # Get personality configuration from environment variable
+    personality_name = os.environ.get("AZURE_AI_AGENT_PERSONALITY", "default")
+    personality_config = get_personality_config(personality_name)
+    
+    # Choose appropriate instructions based on tool type and personality
+    if isinstance(tool, AzureAISearchTool):
+        instructions = personality_config["instructions_ai_search"]
+    else:
+        instructions = personality_config["instructions_file_search"]
+    
+    # Get temperature from personality config
+    temperature = personality_config.get("temperature", 0.7)
+    
+    logger.info(f"Creating agent with personality: {personality_name}, temperature: {temperature}")
     
     agent = await ai_client.agents.create_agent(
         model=os.environ["AZURE_AI_AGENT_DEPLOYMENT_NAME"],
         name=os.environ["AZURE_AI_AGENT_NAME"],
         instructions=instructions,
-        toolset=toolset
+        toolset=toolset,
+        temperature=temperature
     )
     return agent
 

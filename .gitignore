@@ -1,7 +1,6 @@
-# Ignore Jupyter notebooks (project standard: notebooks removed)
-*.ipynb
+# (Removed notebook ignore per request) Not ignoring *.ipynb so notebooks can be tracked or explicitly deleted.
 
-# (Removed per request) Do not ignore individual status/test files; ensure they are actually deleted instead.
+# (Still honoring earlier directive) Do not ignore individual status/test files; ensure they are actually deleted instead.
 
 __pycache__/
 

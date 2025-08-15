@@ -13,6 +13,7 @@ import { AgentIcon } from "./AgentIcon";
 import { SettingsPanel } from "../core/SettingsPanel";
 import { AgentPreviewChatBot } from "./AgentPreviewChatBot";
 import { MenuButton } from "../core/MenuButton/MenuButton";
+import { PersonalitySelector } from "./PersonalitySelector";
 import { IChatItem } from "./chatbot/types";
 import { Waves } from "./Waves";
 import { BuiltWithBadge } from "./BuiltWithBadge";
@@ -151,6 +152,11 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
 
   const handleSettingsPanelOpenChange = (isOpen: boolean) => {
     setIsSettingsPanelOpen(isOpen);
+  };
+
+  const handlePersonalityChange = (personalityId: string) => {
+    // Note: Personality changes require agent recreation, which happens on server restart
+    console.log(`Personality changed to: ${personalityId}`);
   };
 
   const newThread = () => {
@@ -516,6 +522,11 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       </div>
 
       <div className={styles.content}>
+        {/* Personality Selector */}
+        <div style={{ padding: "16px", borderBottom: "1px solid #e1e1e1" }}>
+          <PersonalitySelector onPersonalityChange={handlePersonalityChange} />
+        </div>
+        
         <div className={styles.chatbot}>
           {isLoadingChatHistory ? (
             <Spinner label={"Loading chat history..."} />

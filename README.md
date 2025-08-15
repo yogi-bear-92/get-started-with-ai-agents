@@ -29,6 +29,9 @@ The app code runs in Azure Container App to process the user input and generate 
 - **Knowledge Retrieval**<br/>
 The AI agent uses file search to retrieve knowledge from uploaded files.
 
+- **Multiple Agent Personalities**<br/>
+Choose from predefined personalities (Customer Service, Technical Support, Sales Assistant, General Assistant) or create custom personalities. Each personality has unique instructions, temperature settings, and behavior characteristics.
+
 - **Customizable AI Model Deployment**<br/>
 The solution allows users to configure and deploy AI models, such as gpt-4o-mini, with options to adjust model capacity, and knowledge retrieval methods.
 
@@ -159,6 +162,75 @@ This template creates everything you need to get started with Azure AI Foundry:
 | [AI Search Service](https://learn.microsoft.com/azure/search/) | *Optional* - Enables hybrid search capabilities combining semantic and vector search |
 | [Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) | *Optional* - Provides application performance monitoring, logging, and telemetry for debugging and optimization |
 | [Log Analytics Workspace](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview) | *Optional* - Collects and analyzes telemetry data for monitoring and troubleshooting |
+
+## Agent Personality Configuration
+
+This solution includes support for multiple agent personalities, allowing you to customize your AI agent's behavior and communication style based on your use case.
+
+### Available Personalities
+
+| Personality | Description | Use Cases | Temperature |
+|-------------|-------------|-----------|-------------|
+| **Customer Service** | Friendly, empathetic, and patient. Focuses on customer satisfaction and clear problem resolution. | Customer support, help desk, user assistance | 0.7 |
+| **Technical Support** | Analytical, detailed, and methodical. Provides precise technical information and step-by-step solutions. | IT support, troubleshooting, technical documentation | 0.3 |
+| **Sales Assistant** | Enthusiastic, persuasive, and benefit-focused. Highlights value propositions and builds rapport. | Sales support, product recommendations, lead qualification | 0.8 |
+| **General Assistant** | Balanced, professional, and versatile. Adapts communication style to match user needs. | General purpose, administrative tasks, information retrieval | 0.5 |
+
+### Configuring Agent Personality
+
+#### For New Deployments
+
+Set the personality before deploying:
+
+```bash
+azd env set AZURE_AI_AGENT_PERSONALITY customer_service
+azd up
+```
+
+#### For Existing Deployments
+
+1. Set the environment variable:
+   ```bash
+   azd env set AZURE_AI_AGENT_PERSONALITY technical_support
+   ```
+
+2. Redeploy to apply changes:
+   ```bash
+   azd deploy
+   ```
+
+#### Available Personality Values
+
+- `customer_service` - Customer Service Agent
+- `technical_support` - Technical Support Agent  
+- `sales_assistant` - Sales Assistant Agent
+- `general_assistant` - General Assistant Agent (default)
+
+### Creating Custom Personalities
+
+To create a custom personality, modify the `AGENT_PERSONALITIES` dictionary in `src/gunicorn.conf.py`:
+
+```python
+AGENT_PERSONALITIES = {
+    # ... existing personalities ...
+    "my_custom_personality": {
+        "name": "My Custom Agent",
+        "search_instructions": "Use {tool_type} always to provide specialized assistance. Avoid using base knowledge.",
+        "general_instructions": """You are a specialized assistant with custom behavior.
+        - Provide detailed, customized responses
+        - Follow specific guidelines for your use case
+        - Maintain a professional tone""",
+        "temperature": 0.6,
+        "top_p": 0.9
+    }
+}
+```
+
+### Important Notes
+
+- **Agent Recreation Required**: Changing personalities requires the agent to be recreated, as personality settings are applied during agent initialization.
+- **Backward Compatibility**: If no personality is specified, the system defaults to `general_assistant`.
+- **Tool Awareness**: Instructions automatically adapt based on whether AI Search or File Search is being used.
 
 ## Troubleshooting
 

@@ -81,6 +81,7 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
   const [messageList, setMessageList] = useState<IChatItem[]>([]);
   const [isResponding, setIsResponding] = useState(false);
   const [isLoadingChatHistory, setIsLoadingChatHistory] = useState(true);
+  const [selectedPersonality, setSelectedPersonality] = useState<string>("default");
 
   const loadChatHistory = async () => {
     try {
@@ -152,6 +153,21 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
   const handleSettingsPanelOpenChange = (isOpen: boolean) => {
     setIsSettingsPanelOpen(isOpen);
   };
+
+  const handlePersonalityChange = (personalityId: string) => {
+    setSelectedPersonality(personalityId);
+    // Note: In a real implementation, you might want to send this to the backend
+    // or store it in localStorage for persistence across sessions
+    localStorage.setItem('agentPersonality', personalityId);
+  };
+
+  // Load personality from localStorage on component mount
+  useEffect(() => {
+    const savedPersonality = localStorage.getItem('agentPersonality');
+    if (savedPersonality) {
+      setSelectedPersonality(savedPersonality);
+    }
+  }, []);
 
   const newThread = () => {
     setMessageList([]);
@@ -550,6 +566,8 @@ export function AgentPreview({ agentDetails }: IAgentPreviewProps): ReactNode {
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onOpenChange={handleSettingsPanelOpenChange}
+        selectedPersonality={selectedPersonality}
+        onPersonalityChange={handlePersonalityChange}
       />
     </div>
   );
